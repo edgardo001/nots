@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Note, ViewMode, SortField, SortOrder } from '../types';
+import type { Note, NoteVersion, ViewMode, SortField, SortOrder } from '../types';
 import {
   getAllNotes,
   getTrashedNotes,
@@ -8,6 +8,8 @@ import {
   deleteNote as dbDeleteNote,
   permanentlyDeleteNote as dbPermanentDelete,
   restoreNote as dbRestoreNote,
+  addVersion as dbAddVersion,
+  getVersions as dbGetVersions,
 } from '../db/operations';
 
 function sortNotes(notes: Note[], field: SortField, order: SortOrder): Note[] {
@@ -56,6 +58,10 @@ interface NotesState {
   setSortField: (field: SortField) => void;
   setSortOrder: (order: SortOrder) => void;
   moveNote: (id: string, newPosition: number) => Promise<void>;
+  saveVersion: (noteId: string, title: string, content: string) => Promise<void>;
+  getVersions: (noteId: string) => Promise<NoteVersion[]>;
+  restoreVersion: (noteId: string, version: NoteVersion) => Promise<void>;
+  forkFromVersion: (version: NoteVersion) => Promise<string>;
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -149,5 +155,41 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       sortOrder
     );
     set({ notes });
+  },
+
+  saveVersion: async (noteId: string, title: string, content: string) => {
+    const versions = await dbGetVersions(noteId);
+    const nextNum = versions.length > 0 ? versions[0].versionNumber + 1 : 1;
+    await dbAddVersion({
+      noteId,
+      title,
+      content,
+      versionNumber: nextNum,
+      savedAt: new Date().toISOString(),
+    });
+  },
+
+  getVersions: async (noteId: string) => {
+    return dbGetVersions(noteId);
+  },
+
+  restoreVersion: async (noteId: string, version: NoteVersion) => {
+    const updated = await dbUpdateNote(noteId, { title: version.title, content: version.content });
+    if (!updated) return;
+    const { sortField, sortOrder } = get();
+    const notes = sortNotes(
+      get().notes.map(n => (n.id === noteId ? updated : n)),
+      sortField,
+      sortOrder
+    );
+    set({ notes });
+  },
+
+  forkFromVersion: async (version: NoteVersion) => {
+    const note = await dbAddNote({ title: `${version.title} (fork)`, content: version.content });
+    const { sortField, sortOrder } = get();
+    const notes = sortNotes([...get().notes, note], sortField, sortOrder);
+    set({ notes, activeNoteId: note.id });
+    return note.id;
   },
 }));
