@@ -2,6 +2,7 @@ import './index.css'
 import { useEffect } from 'react'
 import { useNotesStore } from './stores/notesStore'
 import { useUIStore } from './stores/uiStore'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import NoteGrid from './components/layout/NoteGrid'
@@ -13,6 +14,9 @@ export default function App() {
   const setActiveNote = useNotesStore(s => s.setActiveNote)
   const resolvedTheme = useUIStore(s => s.resolvedTheme)
   const loadTheme = useUIStore(s => s.loadTheme)
+  const sidebarOpen = useUIStore(s => s.sidebarOpen)
+
+  useKeyboardShortcuts()
 
   useEffect(() => {
     loadNotes()
@@ -27,7 +31,7 @@ export default function App() {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <Sidebar />
+        {sidebarOpen && <Sidebar />}
         <main style={{ flex: 1, overflow: 'auto', padding: 32, background: 'var(--bg)' }}>
           <NoteGrid />
         </main>
@@ -35,6 +39,9 @@ export default function App() {
 
       {activeNoteId && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Editor de nota"
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
             zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
