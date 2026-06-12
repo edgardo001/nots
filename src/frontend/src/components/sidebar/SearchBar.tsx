@@ -6,7 +6,7 @@ export default function SearchBar() {
   const setSearchQuery = useNotesStore(s => s.setSearchQuery)
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'relative', width: '100%' }} role="search" aria-label="Buscar notas">
       <span style={{
         position: 'absolute', left: 12, top: '50%',
         transform: 'translateY(-50%)', fontSize: 13, opacity: 0.3,
@@ -15,10 +15,12 @@ export default function SearchBar() {
         🔍
       </span>
       <input
-        type="text"
+        type="search"
+        data-search-input
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        placeholder="Buscar notas..."
+        placeholder="Buscar notas... (Ctrl+F)"
+        aria-label="Buscar notas"
         style={{
           width: '100%', padding: '8px 12px 8px 34px',
           borderRadius: 10, border: '1px solid var(--border)',
@@ -30,6 +32,7 @@ export default function SearchBar() {
       {searchQuery && (
         <button
           onClick={() => setSearchQuery('')}
+          aria-label="Limpiar búsqueda"
           style={{
             position: 'absolute', right: 10, top: '50%',
             transform: 'translateY(-50%)', background: 'none',
