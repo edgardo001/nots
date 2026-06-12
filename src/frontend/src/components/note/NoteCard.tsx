@@ -11,24 +11,31 @@ interface NoteCardProps {
   onRestore?: () => void
 }
 
-const CARD_COLORS = [
-  { bg: '#fff5f5', border: '#ffd4d4', text: '#5c2a2a' },
-  { bg: '#fff8e8', border: '#f5e0b8', text: '#5c4a2a' },
-  { bg: '#f0faf0', border: '#c8e6c9', text: '#2a5c2a' },
-  { bg: '#e8f4fd', border: '#b3d9f2', text: '#2a4a5c' },
-  { bg: '#f5f0ff', border: '#d4c8f0', text: '#3a2a5c' },
-  { bg: '#fef0f5', border: '#f5c8d9', text: '#5c2a4a' },
-  { bg: '#f0faf8', border: '#c8e8e0', text: '#2a4a42' },
-  { bg: '#fff5e8', border: '#f0d4b8', text: '#5c3a2a' },
-]
+const NOTE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  '#fff5f5': { bg: '#fff5f5', border: '#ffd4d4', text: '#5c2a2a' },
+  '#fff8e8': { bg: '#fff8e8', border: '#f5e0b8', text: '#5c4a2a' },
+  '#f0faf0': { bg: '#f0faf0', border: '#c8e6c9', text: '#2a5c2a' },
+  '#e8f4fd': { bg: '#e8f4fd', border: '#b3d9f2', text: '#2a4a5c' },
+  '#f5f0ff': { bg: '#f5f0ff', border: '#d4c8f0', text: '#3a2a5c' },
+  '#fef0f5': { bg: '#fef0f5', border: '#f5c8d9', text: '#5c2a4a' },
+  '#f0faf8': { bg: '#f0faf8', border: '#c8e8e0', text: '#2a4a42' },
+  '#fff5e8': { bg: '#fff5e8', border: '#f0d4b8', text: '#5c3a2a' },
+  '#f5f5f5': { bg: '#f5f5f5', border: '#e0e0e0', text: '#3a3a3a' },
+  '#fffff0': { bg: '#fffff0', border: '#f0f0d8', text: '#4a4a2a' },
+  '#f0f8ff': { bg: '#f0f8ff', border: '#c8e0f0', text: '#2a3a5c' },
+  '#fdf5f0': { bg: '#fdf5f0', border: '#f0d8c8', text: '#5c3a2a' },
+}
 
-function getCardStyle(index: number) {
-  return CARD_COLORS[index % CARD_COLORS.length]
+const DEFAULT_COLOR = '#fff8e8'
+
+function getCardStyle(color?: string) {
+  if (color && NOTE_COLORS[color]) return NOTE_COLORS[color]
+  return NOTE_COLORS[DEFAULT_COLOR]
 }
 
 export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCardProps) {
   const viewMode = useNotesStore(s => s.viewMode)
-  const cardStyle = getCardStyle(note.position)
+  const cardStyle = getCardStyle(note.color)
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
@@ -67,7 +74,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         <span style={{ fontSize: 11, opacity: 0.4, whiteSpace: 'nowrap' }}>
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
-        <button onClick={e => { e.stopPropagation(); onDelete() }} style={{
+        <button onClick={e => { e.stopPropagation(); onDelete() }} aria-label="Eliminar nota" style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 16, opacity: 0.3, padding: 2, lineHeight: 1, color: cardStyle.text,
         }}>×</button>
@@ -111,6 +118,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
           {onRestore && (
             <button
               onClick={e => { e.stopPropagation(); onRestore() }}
+              aria-label="Restaurar nota"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: 13, opacity: 0, padding: 2, lineHeight: 1,
@@ -123,6 +131,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
           )}
           <button
             onClick={e => { e.stopPropagation(); onDelete() }}
+            aria-label="Eliminar nota"
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 14, opacity: 0, padding: 2, lineHeight: 1,
