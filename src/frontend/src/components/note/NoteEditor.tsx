@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import type { Note } from '../../types'
+import type { Note, NoteVersion } from '../../types'
 import { useNotesStore } from '../../stores/notesStore'
 
 const EMOJIS = [
@@ -15,6 +15,12 @@ const EMOJIS = [
   '🍕', '🍔', '☕', '🍺', '🍰', '🥗', '🍜', '🧁', '🍩',
 ]
 
+const NOTE_COLORS = [
+  '#fff5f5', '#fff8e8', '#f0faf0', '#e8f4fd',
+  '#f5f0ff', '#fef0f5', '#f0faf8', '#fff5e8',
+  '#f5f5f5', '#fffff0', '#f0f8ff', '#fdf5f0',
+]
+
 interface NoteEditorProps {
   noteId: string
 }
@@ -23,6 +29,10 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const notes = useNotesStore(s => s.notes)
   const updateNote = useNotesStore(s => s.updateNote)
   const setActiveNote = useNotesStore(s => s.setActiveNote)
+  const saveVersion = useNotesStore(s => s.saveVersion)
+  const getVersions = useNotesStore(s => s.getVersions)
+  const restoreVersion = useNotesStore(s => s.restoreVersion)
+  const forkFromVersion = useNotesStore(s => s.forkFromVersion)
   const note = notes.find(n => n.id === noteId)
 
   const [title, setTitle] = useState(note?.title ?? '')
@@ -30,14 +40,22 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
   const [emoji, setEmoji] = useState(note?.emoji ?? '📝')
   const [tagInput, setTagInput] = useState('')
   const [emojiOpen, setEmojiOpen] = useState(false)
+  const [colorOpen, setColorOpen] = useState(false)
   const [preview, setPreview] = useState(note ? note.content.length > 0 : true)
+  const [versions, setVersions] = useState<NoteVersion[]>([])
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  const [versionsLoaded, setVersionsLoaded] = useState(false)
   const emojiRef = useRef<HTMLDivElement>(null)
+  const colorRef = useRef<HTMLDivElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const savedVersionRef = useRef<string>('')
 
   useEffect(() => {
     if (note) {
       setTitle(note.title)
       setContent(note.content)
       setEmoji(note.emoji)
+      savedVersionRef.current = note.content
     }
   }, [note])
 
@@ -52,13 +70,82 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
     return () => document.removeEventListener('mousedown', handler)
   }, [emojiOpen])
 
-  const save = useCallback(() => {
+  useEffect(() => {
+    if (!colorOpen) return
+    const handler = (e: MouseEvent) => {
+      if (colorRef.current && !colorRef.current.contains(e.target as Node)) {
+        setColorOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [colorOpen])
+
+  const loadVersions = useCallback(async () => {
+    if (!noteId || versionsLoaded) return
+    const v = await getVersions(noteId)
+    setVersions(v)
+    setVersionsLoaded(true)
+  }, [noteId, getVersions, versionsLoaded])
+
+  useEffect(() => {
+    setVersionsLoaded(false)
+    setVersions([])
+  }, [noteId])
+
+  const save = useCallback(async () => {
     if (!note) return
     const tags = note.tags
-    if (title !== note.title || content !== note.content || emoji !== note.emoji) {
+    const changed = title !== note.title || content !== note.content || emoji !== note.emoji || (note.color || NOTE_COLORS[0]) !== note.color
+    if (changed) {
       updateNote(note.id, { title, content, emoji, tags })
     }
-  }, [note, title, content, emoji, updateNote])
+    if (content !== savedVersionRef.current && content.length > 0) {
+      await saveVersion(note.id, title || 'Sin título', content)
+      savedVersionRef.current = content
+    }
+  }, [note, title, content, emoji, updateNote, saveVersion])
+
+  const handleRestoreVersion = async (version: NoteVersion) => {
+    if (content.length > 0) {
+      await saveVersion(noteId, title || 'Sin título', content)
+    }
+    await restoreVersion(noteId, version)
+    setTitle(version.title)
+    setContent(version.content)
+    savedVersionRef.current = version.content
+    setVersionsLoaded(false)
+    const v = await getVersions(noteId)
+    setVersions(v)
+  }
+
+  const handleForkVersion = async (version: NoteVersion) => {
+    await forkFromVersion(version)
+  }
+
+  const handleImageInsert = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      const markdown = `![${file.name}](${dataUrl})`
+      setContent(prev => prev + '\n\n' + markdown)
+    }
+    reader.readAsDataURL(file)
+  }, [])
+
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) handleImageInsert(file)
+        return
+      }
+    }
+  }, [handleImageInsert])
 
   if (!note) return null
 
@@ -66,10 +153,12 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
         <div ref={emojiRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setEmojiOpen(!emojiOpen)}
+            aria-label="Seleccionar emoji"
+            aria-expanded={emojiOpen}
             style={{
               width: 44, height: 44, borderRadius: 10,
               border: '1px solid var(--border)',
@@ -108,6 +197,70 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             </div>
           )}
         </div>
+
+        <div ref={colorRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setColorOpen(!colorOpen)}
+            aria-label="Seleccionar color de nota"
+            aria-expanded={colorOpen}
+            style={{
+              width: 44, height: 44, borderRadius: 10,
+              border: '2px solid var(--border)',
+              background: note.color || NOTE_COLORS[0],
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+            title="Color de nota"
+          />
+          {colorOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: 6,
+              zIndex: 20, background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              padding: 10, width: 180, display: 'grid',
+              gridTemplateColumns: 'repeat(6, 1fr)', gap: 4,
+              animation: 'fadeIn 0.1s ease',
+            }}>
+              {NOTE_COLORS.map(c => (
+                <button
+                  key={c}
+                  onClick={() => { updateNote(note.id, { color: c }); setColorOpen(false); }}
+                  style={{
+                    width: 24, height: 24, borderRadius: 6,
+                    border: c === (note.color || NOTE_COLORS[0])
+                      ? '2px solid var(--accent)' : '1px solid var(--border)',
+                    background: c, cursor: 'pointer',
+                    transition: 'all 0.1s',
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={e => { if (e.target.files?.[0]) handleImageInsert(e.target.files[0]); e.target.value = '' }}
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => imageInputRef.current?.click()}
+          aria-label="Insertar imagen"
+          style={{
+            width: 44, height: 44, borderRadius: 10,
+            border: '1px solid var(--border)',
+            background: 'var(--bg)', cursor: 'pointer',
+            fontSize: 18, display: 'flex', alignItems: 'center',
+            justifyContent: 'center', transition: 'all 0.15s',
+            flexShrink: 0,
+          }}
+          title="Insertar imagen"
+        >
+          🖼️
+        </button>
+
         <input
           type="text"
           value={title}
@@ -122,6 +275,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         />
         <button
           onClick={() => setPreview(!preview)}
+          aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
           style={{
             width: 44, height: 44, borderRadius: 10,
             border: `1px solid ${preview ? 'var(--accent)' : 'var(--border)'}`,
@@ -137,6 +291,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         </button>
         <button
           onClick={() => setActiveNote(null)}
+          aria-label="Cerrar editor"
           style={{
             width: 44, height: 44, borderRadius: 10,
             border: '1px solid var(--border)',
@@ -152,9 +307,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       </div>
 
       {preview ? (
-        <div style={{
+        <div
+          role="region"
+          aria-label="Vista previa de Markdown"
+          style={{
           minHeight: 200, padding: 14, borderRadius: 10,
-          border: '1px solid var(--border)', background: 'var(--bg)',
+          border: '1px solid var(--border)',
+          background: note.color || 'var(--bg)',
           color: 'var(--text)', fontSize: 14, lineHeight: 1.7,
           overflowY: 'auto',
         }}>
@@ -167,10 +326,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           value={content}
           onChange={e => setContent(e.target.value)}
           onBlur={save}
-          placeholder="Escribe tu nota aquí... (soporta **Markdown**)"
+          onPaste={handlePaste}
+          placeholder="Escribe tu nota aquí... (soporta **Markdown**, Ctrl+V para pegar imágenes)"
+          aria-label="Contenido de la nota"
           style={{
             minHeight: 200, padding: 14, borderRadius: 10,
-            border: '1px solid var(--border)', background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            background: note.color || 'var(--bg)',
             color: 'var(--text)', fontSize: 14, lineHeight: 1.7,
             resize: 'vertical', outline: 'none', fontFamily: 'inherit',
           }}
@@ -233,6 +395,80 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             </div>
           )}
         </div>
+      </div>
+
+      <div>
+        <button
+          onClick={() => { setVersionsOpen(!versionsOpen); if (!versionsOpen) loadVersions() }}
+          aria-expanded={versionsOpen}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-secondary)', fontSize: 12, padding: 0,
+          }}
+        >
+          <span style={{ fontSize: 10, transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>▶</span>
+          Historial de versiones
+        </button>
+        {versionsOpen && (
+          <div style={{
+            marginTop: 8, border: '1px solid var(--border)', borderRadius: 8,
+            overflow: 'hidden', maxHeight: 200, overflowY: 'auto',
+          }}>
+            {versions.length === 0 ? (
+              <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-secondary)', opacity: 0.6 }}>
+                Sin versiones guardadas
+              </div>
+            ) : (
+              versions.map(v => (
+                <div
+                  key={v.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 14px', borderBottom: '1px solid var(--border)',
+                    fontSize: 12, cursor: 'pointer', transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600 }}>
+                      v{v.versionNumber} — {v.title || 'Sin título'}
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+                      {new Date(v.savedAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                    <button
+                      onClick={() => handleForkVersion(v)}
+                      style={{
+                        padding: '4px 8px', borderRadius: 6,
+                        border: '1px solid var(--border)', background: 'transparent',
+                        color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+                        fontWeight: 600, transition: 'all 0.15s',
+                      }}
+                      title="Crear nota nueva desde esta versión"
+                    >
+                      Fork
+                    </button>
+                    <button
+                      onClick={() => handleRestoreVersion(v)}
+                      style={{
+                        padding: '4px 10px', borderRadius: 6,
+                        border: '1px solid var(--accent)', background: 'transparent',
+                        color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
+                        fontWeight: 600, transition: 'all 0.15s',
+                      }}
+                    >
+                      Restaurar
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.5 }}>
