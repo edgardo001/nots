@@ -93,10 +93,15 @@ export default function Header() {
       padding: '0 24px', height: 56, background: 'var(--surface)',
       borderBottom: '1px solid var(--border)', gap: 16,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 22 }} aria-hidden="true">📝</span>
-        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
-          Notas
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 20 }} aria-hidden="true">⬛</span>
+          <span style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', letterSpacing: '-1.5px', textTransform: 'lowercase', fontFamily: 'var(--font-display)' }}>
+            nots
+          </span>
+        </div>
+        <span className="hide-mobile" style={{ fontSize: 9, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 500 }}>
+          no necesitas otra app de notas
         </span>
       </div>
 
@@ -110,7 +115,7 @@ export default function Header() {
           aria-label={sidebarOpen ? 'Ocultar sidebar' : 'Mostrar sidebar'}
           aria-expanded={sidebarOpen}
           style={{
-            padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border)',
+            padding: '6px 10px', borderRadius: 0, border: '1px solid var(--border)',
             background: sidebarOpen ? 'var(--accent-light)' : 'transparent',
             color: sidebarOpen ? 'var(--accent)' : 'var(--text)',
             cursor: 'pointer', fontSize: 15, transition: 'all 0.15s',
@@ -125,7 +130,7 @@ export default function Header() {
             aria-label="Exportar o importar notas"
             aria-expanded={importOpen}
             style={{
-              padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)',
+              padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
               cursor: 'pointer', fontSize: 13, fontWeight: 500,
               transition: 'all 0.15s',
@@ -137,7 +142,7 @@ export default function Header() {
             <div style={{
               position: 'absolute', top: '100%', right: 0, marginTop: 4,
               background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+              borderRadius: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
               minWidth: 180, zIndex: 20, overflow: 'hidden',
             }}>
               <button
@@ -174,7 +179,7 @@ export default function Header() {
           onClick={() => setViewMode(viewMode === 'postit' ? 'list' : 'postit')}
           aria-label={viewMode === 'postit' ? 'Cambiar a vista lista' : 'Cambiar a vista post-it'}
           style={{
-            padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)',
+            padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
             background: viewMode === 'list' ? 'var(--accent)' : 'transparent',
             color: viewMode === 'list' ? '#fff' : 'var(--text)',
             cursor: 'pointer', fontSize: 13, fontWeight: 500,
@@ -187,7 +192,7 @@ export default function Header() {
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
           style={{
-            padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)',
+            padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
             background: 'transparent', color: 'var(--text)',
             cursor: 'pointer', fontSize: 15, transition: 'all 0.15s',
           }}
