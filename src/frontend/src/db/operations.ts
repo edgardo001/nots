@@ -1,4 +1,4 @@
-import type { Note, NoteVersion, AppSettings } from '../types';
+import type { Note, NoteVersion, Attachment, AppSettings } from '../types';
 import { getDB } from './schema';
 
 function nowISO(): string {
@@ -157,4 +157,34 @@ export async function getVersions(noteId: string): Promise<NoteVersion[]> {
 export async function getLatestVersion(noteId: string): Promise<NoteVersion | undefined> {
   const versions = await getVersions(noteId);
   return versions[0];
+}
+
+export async function addAttachment(noteId: string, fileName: string, mimeType: string, data: ArrayBuffer): Promise<string> {
+  const db = await getDB();
+  const id = crypto.randomUUID();
+  await db.add('attachments', {
+    id,
+    noteId,
+    fileName,
+    mimeType,
+    data,
+    size: data.byteLength,
+    createdAt: nowISO(),
+  });
+  return id;
+}
+
+export async function getAttachment(id: string): Promise<Attachment | undefined> {
+  const db = await getDB();
+  return db.get('attachments', id);
+}
+
+export async function getAttachmentsForNote(noteId: string): Promise<Attachment[]> {
+  const db = await getDB();
+  return db.getAllFromIndex('attachments', 'noteId', noteId);
+}
+
+export async function deleteAttachment(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('attachments', id);
 }
