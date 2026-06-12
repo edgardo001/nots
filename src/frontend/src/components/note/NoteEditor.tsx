@@ -160,9 +160,9 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             aria-label="Seleccionar emoji"
             aria-expanded={emojiOpen}
             style={{
-              width: 44, height: 44, borderRadius: 10,
-              border: '1px solid var(--border)',
-              background: 'var(--bg)', cursor: 'pointer',
+              width: 44, height: 44, borderRadius: 6,
+              border: '1px solid rgba(0,0,0,0.10)',
+              background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
               fontSize: 22, display: 'flex', alignItems: 'center',
               justifyContent: 'center', transition: 'all 0.15s',
             }}
@@ -174,7 +174,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
               position: 'absolute', top: '100%', left: 0, marginTop: 6,
               zIndex: 20, background: 'var(--surface)',
               border: '1px solid var(--border)',
-              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
               padding: 10, width: 270, display: 'grid',
               gridTemplateColumns: 'repeat(9, 1fr)', gap: 2,
               animation: 'fadeIn 0.1s ease',
@@ -184,7 +184,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
                   key={e}
                   onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
                   style={{
-                    width: 26, height: 26, borderRadius: 6, border: 'none',
+                    width: 26, height: 26, borderRadius: 0, border: 'none',
                     background: e === emoji ? 'var(--accent-light)' : 'transparent',
                     cursor: 'pointer', fontSize: 16, display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
@@ -204,8 +204,8 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             aria-label="Seleccionar color de nota"
             aria-expanded={colorOpen}
             style={{
-              width: 44, height: 44, borderRadius: 10,
-              border: '2px solid var(--border)',
+              width: 44, height: 44, borderRadius: 6,
+              border: '2px solid rgba(0,0,0,0.15)',
               background: note.color || NOTE_COLORS[0],
               cursor: 'pointer', transition: 'all 0.15s',
             }}
@@ -216,7 +216,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
               position: 'absolute', top: '100%', left: 0, marginTop: 6,
               zIndex: 20, background: 'var(--surface)',
               border: '1px solid var(--border)',
-              borderRadius: 12, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+              borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
               padding: 10, width: 180, display: 'grid',
               gridTemplateColumns: 'repeat(6, 1fr)', gap: 4,
               animation: 'fadeIn 0.1s ease',
@@ -226,7 +226,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
                   key={c}
                   onClick={() => { updateNote(note.id, { color: c }); setColorOpen(false); }}
                   style={{
-                    width: 24, height: 24, borderRadius: 6,
+                    width: 24, height: 24, borderRadius: 0,
                     border: c === (note.color || NOTE_COLORS[0])
                       ? '2px solid var(--accent)' : '1px solid var(--border)',
                     background: c, cursor: 'pointer',
@@ -249,9 +249,9 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onClick={() => imageInputRef.current?.click()}
           aria-label="Insertar imagen"
           style={{
-            width: 44, height: 44, borderRadius: 10,
-            border: '1px solid var(--border)',
-            background: 'var(--bg)', cursor: 'pointer',
+            width: 44, height: 44, borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.10)',
+            background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
             fontSize: 18, display: 'flex', alignItems: 'center',
             justifyContent: 'center', transition: 'all 0.15s',
             flexShrink: 0,
@@ -268,20 +268,22 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onBlur={save}
           placeholder="Título"
           style={{
-            flex: 1, padding: '10px 14px', borderRadius: 10,
-            border: '1px solid var(--border)', background: 'var(--bg)',
-            color: 'var(--text)', fontSize: 20, fontWeight: 700, outline: 'none',
+            flex: 1, padding: '10px 14px', borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.10)',
+            background: 'transparent',
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+            color: 'inherit', fontSize: 20, fontWeight: 700, outline: 'none',
           }}
         />
         <button
           onClick={() => setPreview(!preview)}
           aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
           style={{
-            width: 44, height: 44, borderRadius: 10,
-            border: `1px solid ${preview ? 'var(--accent)' : 'var(--border)'}`,
-            background: preview ? 'var(--accent-light)' : 'var(--bg)',
+            width: 44, height: 44, borderRadius: 6,
+            border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
+            background: preview ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
             cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0,
-            color: preview ? 'var(--accent)' : 'var(--text-secondary)',
+            color: preview ? 'var(--text)' : 'var(--text-secondary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s',
           }}
@@ -293,9 +295,9 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onClick={() => setActiveNote(null)}
           aria-label="Cerrar editor"
           style={{
-            width: 44, height: 44, borderRadius: 10,
-            border: '1px solid var(--border)',
-            background: 'var(--bg)', cursor: 'pointer',
+            width: 44, height: 44, borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.10)',
+            background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
             fontSize: 18, lineHeight: 1, flexShrink: 0,
             color: 'var(--text-secondary)', display: 'flex',
             alignItems: 'center', justifyContent: 'center',
@@ -311,12 +313,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           role="region"
           aria-label="Vista previa de Markdown"
           style={{
-          minHeight: 200, padding: 14, borderRadius: 10,
-          border: '1px solid var(--border)',
-          background: note.color || 'var(--bg)',
-          color: 'var(--text)', fontSize: 14, lineHeight: 1.7,
-          overflowY: 'auto',
-        }}>
+            minHeight: 200, padding: 14, borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.08)',
+            background: 'transparent',
+            boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.06)',
+            color: 'inherit', fontSize: 14, lineHeight: 1.7,
+            overflowY: 'auto',
+          }}>
           <Markdown remarkPlugins={[remarkGfm]}>
             {content || '*Sin contenido*'}
           </Markdown>
@@ -330,11 +333,13 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           placeholder="Escribe tu nota aquí... (soporta **Markdown**, Ctrl+V para pegar imágenes)"
           aria-label="Contenido de la nota"
           style={{
-            minHeight: 200, padding: 14, borderRadius: 10,
-            border: '1px solid var(--border)',
-            background: note.color || 'var(--bg)',
-            color: 'var(--text)', fontSize: 14, lineHeight: 1.7,
+            minHeight: 200, padding: 14, borderRadius: 6,
+            border: '1px solid rgba(0,0,0,0.08)',
+            background: 'transparent',
+            boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.06)',
+            color: 'inherit', fontSize: 14, lineHeight: 1.7,
             resize: 'vertical', outline: 'none', fontFamily: 'inherit',
+            width: '100%', boxSizing: 'border-box',
           }}
         />
       )}
@@ -342,7 +347,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
         {note.tags.map(tag => (
           <span key={tag} style={{
-            fontSize: 12, padding: '3px 10px', borderRadius: 12,
+            fontSize: 12, padding: '3px 10px', borderRadius: 0,
             background: 'var(--accent-light)', color: 'var(--accent)',
           }}>
             #{tag}
@@ -362,7 +367,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             }}
             placeholder="+ etiqueta"
             style={{
-              padding: '3px 10px', borderRadius: 12, border: '1px dashed var(--border)',
+              padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',
               fontSize: 12, width: 90, outline: 'none',
             }}
@@ -371,7 +376,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
             <div style={{
               position: 'absolute', top: '100%', left: 0, marginTop: 4,
               background: 'var(--surface)', border: '1px solid var(--border)',
-              borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              borderRadius: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               minWidth: 140, zIndex: 10, overflow: 'hidden',
             }}>
               {allTags
@@ -386,7 +391,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
                     }}
                     style={{
                       padding: '6px 12px', cursor: 'pointer', fontSize: 12,
-                      color: 'var(--text)', transition: 'background 0.1s',
+                      color: 'inherit', transition: 'background 0.1s',
                     }}
                   >
                     #{t}
@@ -412,7 +417,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
         </button>
         {versionsOpen && (
           <div style={{
-            marginTop: 8, border: '1px solid var(--border)', borderRadius: 8,
+            marginTop: 8, border: '1px solid var(--border)', borderRadius: 0,
             overflow: 'hidden', maxHeight: 200, overflowY: 'auto',
           }}>
             {versions.length === 0 ? (
@@ -443,7 +448,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
                     <button
                       onClick={() => handleForkVersion(v)}
                       style={{
-                        padding: '4px 8px', borderRadius: 6,
+                        padding: '4px 8px', borderRadius: 0,
                         border: '1px solid var(--border)', background: 'transparent',
                         color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
                         fontWeight: 600, transition: 'all 0.15s',
@@ -455,7 +460,7 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
                     <button
                       onClick={() => handleRestoreVersion(v)}
                       style={{
-                        padding: '4px 10px', borderRadius: 6,
+                        padding: '4px 10px', borderRadius: 0,
                         border: '1px solid var(--accent)', background: 'transparent',
                         color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
                         fontWeight: 600, transition: 'all 0.15s',

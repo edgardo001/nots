@@ -59,7 +59,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         style={{
           ...style,
           display: 'flex', alignItems: 'center', gap: 12,
-          padding: '10px 14px', borderRadius: 8, cursor: 'grab',
+          padding: '10px 14px', borderRadius: 0, cursor: 'grab',
           background: cardStyle.bg, border: `1px solid ${cardStyle.border}`,
           color: cardStyle.text, transition: 'all 0.15s',
         }}
@@ -90,7 +90,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
       onClick={onClick}
       style={{
         ...style,
-        width: 220, minHeight: 190, borderRadius: 12,
+        width: 220, minHeight: 190, borderRadius: 0,
         background: cardStyle.bg, border: `1px solid ${cardStyle.border}`,
         padding: '18px 16px 14px', cursor: 'grab', color: cardStyle.text,
         display: 'flex', flexDirection: 'column',
@@ -160,7 +160,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 10 }}>
           {note.tags.map(tag => (
             <span key={tag} style={{
-              fontSize: 10, padding: '2px 8px', borderRadius: 10,
+              fontSize: 10, padding: '2px 8px', borderRadius: 0,
               background: 'rgba(0,0,0,0.06)', opacity: 0.7,
             }}>
               #{tag}

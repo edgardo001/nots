@@ -74,7 +74,7 @@ export default function NoteGrid() {
           <button
             onClick={addNote}
             style={{
-              padding: '10px 24px', borderRadius: 10,
+              padding: '10px 24px', borderRadius: 0,
               background: 'var(--accent)', color: '#fff',
               border: 'none', fontSize: 14, fontWeight: 600,
               cursor: 'pointer', marginTop: 4,

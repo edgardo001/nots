@@ -28,12 +28,12 @@ export default function Sidebar() {
   const viewMode = useNotesStore(s => s.viewMode)
 
   const [tagFilter, setTagFilter] = useState<string | null>(null)
-  // Advanced filter states
   const [colorFilter, setColorFilter] = useState<string | null>(null)
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
   const [attachmentOnly, setAttachmentOnly] = useState<boolean>(false)
   const [attachmentMap, setAttachmentMap] = useState<Record<string, boolean>>({})
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -42,7 +42,6 @@ export default function Sidebar() {
 
   const activeNotes = notes.filter(n => !n.deletedAt)
 
-  // Load attachment presence map when notes change
   useEffect(() => {
     const loadAttachments = async () => {
       const map: Record<string, boolean> = {}
@@ -59,24 +58,11 @@ export default function Sidebar() {
   }, [notes])
 
   let filteredNotes = activeNotes
-  if (tagFilter) {
-    filteredNotes = filteredNotes.filter(n => n.tags.includes(tagFilter))
-  }
-  // Color filter
-  if (colorFilter) {
-    filteredNotes = filteredNotes.filter(n => n.color === colorFilter)
-  }
-  // Date range filter (using createdAt)
-  if (dateFrom) {
-    filteredNotes = filteredNotes.filter(n => n.createdAt >= dateFrom)
-  }
-  if (dateTo) {
-    filteredNotes = filteredNotes.filter(n => n.createdAt <= dateTo)
-  }
-  // Attachment filter
-  if (attachmentOnly) {
-    filteredNotes = filteredNotes.filter(n => attachmentMap[n.id])
-  }
+  if (tagFilter) filteredNotes = filteredNotes.filter(n => n.tags.includes(tagFilter))
+  if (colorFilter) filteredNotes = filteredNotes.filter(n => n.color === colorFilter)
+  if (dateFrom) filteredNotes = filteredNotes.filter(n => n.createdAt >= dateFrom)
+  if (dateTo) filteredNotes = filteredNotes.filter(n => n.createdAt <= dateTo)
+  if (attachmentOnly) filteredNotes = filteredNotes.filter(n => attachmentMap[n.id])
   if (searchQuery) {
     const q = searchQuery.toLowerCase()
     filteredNotes = filteredNotes.filter(n =>
@@ -87,10 +73,11 @@ export default function Sidebar() {
   }
 
   const allTags = [...new Set(activeNotes.flatMap(n => n.tags))].sort()
-  // Unique colors from notes for palette
   const allColors = [...new Set(activeNotes.map(n => n.color))].sort()
-
   const enableSidebarDnd = viewMode === 'list' && !showTrash
+
+  const activeFilterCount = [colorFilter, dateFrom, dateTo, attachmentOnly].filter(Boolean).length
+  const clearAll = () => { setColorFilter(null); setDateFrom(''); setDateTo(''); setAttachmentOnly(false) }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -102,148 +89,213 @@ export default function Sidebar() {
     reordered.forEach((id, idx) => moveNote(id, idx))
   }
 
-  const hasAdvancedFilters = colorFilter || dateFrom || dateTo || attachmentOnly
-
   return (
     <aside style={{
-      width: 280, minWidth: 280, height: '100%',
+      width: 260, minWidth: 260, height: '100%',
       display: 'flex', flexDirection: 'column',
       background: 'var(--surface)', borderRight: '1px solid var(--border)',
     }}>
-      <div style={{ padding: '16px 12px 12px' }}>
+      {/* Nueva nota */}
+      <div style={{ padding: '16px 12px 10px' }}>
         <button
           onClick={addNote}
           aria-label="Crear nueva nota"
           style={{
-            width: '100%', padding: '10px 0', border: 'none',
-            borderRadius: 10, background: 'var(--accent)', color: '#fff',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            transition: 'all 0.15s',
+            width: '100%', padding: '9px 0', border: 'none',
+            borderRadius: 8, background: 'var(--accent)', color: '#fff',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            letterSpacing: '0.02em', transition: 'opacity 0.15s',
           }}
         >
-          + Nueva Nota
+          + Nueva nota
         </button>
       </div>
 
-      {/* Sort controls */}
-      <div style={{ display: 'flex', gap: 6, padding: '0 12px 12px', alignItems: 'center' }}>
+      {/* Ordenar + Filtrar en una fila compacta */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '0 12px 10px',
+      }}>
+        {/* Orden */}
         <select
           value={sortField}
           onChange={e => setSortField(e.target.value as SortField)}
           aria-label="Ordenar notas por"
           style={{
-            flex: 1, padding: '6px 8px', borderRadius: 6,
+            flex: 1, padding: '5px 6px', borderRadius: 6,
             border: '1px solid var(--border)', background: 'var(--bg)',
-            color: 'var(--text)', fontSize: 12, cursor: 'pointer',
+            color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer',
+            appearance: 'none', backgroundImage: 'none',
           }}
         >
-          <option value="updatedAt">Actualizado</option>
-          <option value="createdAt">Creado</option>
-          <option value="title">Título</option>
+          <option value="updatedAt">Recientes</option>
+          <option value="createdAt">Creadas</option>
+          <option value="title">A–Z</option>
         </select>
+
+        {/* Asc/Desc */}
         <button
           onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-          aria-label={sortOrder === 'asc' ? 'Cambiar a orden descendente' : 'Cambiar a orden ascendente'}
+          aria-label={sortOrder === 'asc' ? 'Orden descendente' : 'Orden ascendente'}
+          title={sortOrder === 'asc' ? 'Más antiguo primero' : 'Más reciente primero'}
           style={{
-            padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)',
-            background: 'var(--bg)', color: 'var(--text)', cursor: 'pointer',
-            fontSize: 13, lineHeight: 1,
+            padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border)',
+            background: 'var(--bg)', color: 'var(--text-secondary)',
+            cursor: 'pointer', fontSize: 12, lineHeight: 1, flexShrink: 0,
           }}
         >
           {sortOrder === 'asc' ? '↑' : '↓'}
         </button>
+
+        {/* Botón filtros */}
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          aria-expanded={filtersOpen}
+          aria-label="Mostrar filtros"
+          title="Filtros"
+          style={{
+            padding: '5px 8px', borderRadius: 6, flexShrink: 0,
+            border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
+            background: activeFilterCount > 0 ? 'var(--accent-light)' : 'var(--bg)',
+            color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
+            cursor: 'pointer', fontSize: 12, lineHeight: 1,
+            display: 'flex', alignItems: 'center', gap: 4,
+            transition: 'all 0.15s',
+          }}
+        >
+          ⌥
+          {activeFilterCount > 0 && (
+            <span style={{
+              background: 'var(--accent)', color: '#fff',
+              borderRadius: 10, fontSize: 9, padding: '1px 5px',
+              fontWeight: 700, lineHeight: 1.4,
+            }}>
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Advanced filter controls */}
-      <div style={{ padding: '0 12px 10px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }} aria-label="Filtros avanzados">
-          {/* Color palette */}
-          {allColors.length > 0 && allColors.map(col => (
-            <button
-              key={col}
-              onClick={() => setColorFilter(col === colorFilter ? null : col)}
-              aria-pressed={col === colorFilter}
-              title={`Filtrar por color ${col}`}
-              style={{
-                width: 18,
-                height: 18,
-                background: col,
-                border: col === colorFilter ? '2px solid var(--accent)' : '1px solid var(--border)',
-                borderRadius: 4,
-                cursor: 'pointer',
-                padding: 0,
-                flexShrink: 0,
-              }}
-            />
-          ))}
+      {/* Panel de filtros colapsable */}
+      {filtersOpen && (
+        <div style={{
+          margin: '0 12px 10px',
+          border: '1px solid var(--border)',
+          borderRadius: 8,
+          overflow: 'hidden',
+          background: 'var(--bg)',
+        }}>
+          {/* Colores */}
+          {allColors.length > 0 && (
+            <div style={{
+              padding: '8px 10px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Color</span>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {allColors.map(col => (
+                  <button
+                    key={col}
+                    onClick={() => setColorFilter(col === colorFilter ? null : col)}
+                    aria-pressed={col === colorFilter}
+                    title={col}
+                    style={{
+                      width: 16, height: 16,
+                      background: col,
+                      border: col === colorFilter ? '2px solid var(--accent)' : '1.5px solid rgba(0,0,0,0.12)',
+                      borderRadius: 4,
+                      cursor: 'pointer', padding: 0, flexShrink: 0,
+                      transition: 'transform 0.1s',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-          {/* Date range */}
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            aria-label="Fecha desde"
-            style={{
-              border: '1px solid var(--border)', borderRadius: 4,
-              padding: '2px 4px', fontSize: 11,
-              background: 'var(--bg)', color: 'var(--text)',
-            }}
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            aria-label="Fecha hasta"
-            style={{
-              border: '1px solid var(--border)', borderRadius: 4,
-              padding: '2px 4px', fontSize: 11,
-              background: 'var(--bg)', color: 'var(--text)',
-            }}
-          />
+          {/* Fechas */}
+          <div style={{
+            padding: '8px 10px',
+            borderBottom: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Fecha</span>
+            <div style={{ display: 'flex', gap: 4, flex: 1, alignItems: 'center' }}>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                aria-label="Desde"
+                style={{
+                  flex: 1, border: '1px solid var(--border)', borderRadius: 4,
+                  padding: '3px 4px', fontSize: 10,
+                  background: 'var(--surface)', color: 'var(--text)',
+                  minWidth: 0,
+                }}
+              />
+              <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.4 }}>—</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                aria-label="Hasta"
+                style={{
+                  flex: 1, border: '1px solid var(--border)', borderRadius: 4,
+                  padding: '3px 4px', fontSize: 10,
+                  background: 'var(--surface)', color: 'var(--text)',
+                  minWidth: 0,
+                }}
+              />
+            </div>
+          </div>
 
-          {/* Attachment toggle */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          {/* Adjuntos */}
+          <label style={{
+            padding: '8px 10px',
+            display: 'flex', alignItems: 'center', gap: 8,
+            cursor: 'pointer',
+          }}>
+            <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>📎</span>
             <input
               type="checkbox"
               checked={attachmentOnly}
               onChange={e => setAttachmentOnly(e.target.checked)}
+              style={{ accentColor: 'var(--accent)' }}
             />
-            📎 Adjuntos
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Con adjuntos</span>
           </label>
 
-          {/* Clear advanced filters */}
-          {hasAdvancedFilters && (
+          {/* Limpiar todo */}
+          {activeFilterCount > 0 && (
             <button
-              onClick={() => { setColorFilter(null); setDateFrom(''); setDateTo(''); setAttachmentOnly(false) }}
-              aria-label="Limpiar filtros avanzados"
+              onClick={clearAll}
               style={{
-                padding: '2px 8px', borderRadius: 10, fontSize: 11,
-                border: '1px solid var(--accent)', background: 'var(--accent-light)',
-                color: 'var(--accent)', cursor: 'pointer',
+                width: '100%', padding: '7px', border: 'none', borderTop: '1px solid var(--border)',
+                background: 'transparent', color: 'var(--accent)',
+                fontSize: 11, cursor: 'pointer', fontWeight: 500,
+                transition: 'background 0.1s',
               }}
             >
-              ✕ Limpiar
+              Limpiar filtros
             </button>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Tag filters */}
+      {/* Tags */}
       {allTags.length > 0 && (
-        <div style={{
-          display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 12px 12px',
-        }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 12px 10px' }}>
           {tagFilter && (
             <button
               onClick={() => setTagFilter(null)}
               style={{
-                padding: '3px 10px', borderRadius: 12,
+                padding: '3px 8px', borderRadius: 12,
                 border: '1px solid var(--accent)', background: 'var(--accent-light)',
-                color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
-                fontWeight: 600,
+                color: 'var(--accent)', cursor: 'pointer', fontSize: 11, fontWeight: 600,
               }}
             >
-              ✕ Limpiar
+              ✕
             </button>
           )}
           {allTags.slice(0, 8).map(tag => (
@@ -252,25 +304,25 @@ export default function Sidebar() {
               onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
               aria-pressed={tagFilter === tag}
               style={{
-                padding: '3px 10px', borderRadius: 12,
+                padding: '3px 8px', borderRadius: 12,
                 border: `1px solid ${tagFilter === tag ? 'var(--accent)' : 'var(--border)'}`,
                 background: tagFilter === tag ? 'var(--accent)' : 'transparent',
                 color: tagFilter === tag ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer', fontSize: 11,
-                transition: 'all 0.15s',
+                cursor: 'pointer', fontSize: 11, transition: 'all 0.15s',
               }}
             >
               #{tag}
             </button>
           ))}
           {allTags.length > 8 && (
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.5, padding: '3px 6px' }}>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.4, padding: '3px 4px' }}>
               +{allTags.length - 8}
             </span>
           )}
         </div>
       )}
 
+      {/* Lista de notas */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
         {enableSidebarDnd ? (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -291,6 +343,7 @@ export default function Sidebar() {
         )}
       </div>
 
+      {/* Papelera */}
       <button
         onClick={() => {
           const next = !showTrash
@@ -301,13 +354,16 @@ export default function Sidebar() {
         aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
         aria-expanded={showTrash}
         style={{
-          margin: 8, padding: '8px 16px', borderRadius: 8,
+          margin: 8, padding: '7px 12px', borderRadius: 8,
           border: '1px solid var(--border)', background: 'transparent',
-          color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
+          color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
           textAlign: 'left', transition: 'all 0.15s',
+          display: 'flex', alignItems: 'center', gap: 6,
         }}
       >
-        🗑 Papelera {showTrash ? '▲' : '▼'}
+        <span>🗑</span>
+        <span>Papelera</span>
+        <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
       </button>
     </aside>
   )

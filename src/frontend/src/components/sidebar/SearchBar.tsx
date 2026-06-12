@@ -23,7 +23,7 @@ export default function SearchBar() {
         aria-label="Buscar notas"
         style={{
           width: '100%', padding: '8px 12px 8px 34px',
-          borderRadius: 10, border: '1px solid var(--border)',
+          borderRadius: 0, border: '1px solid var(--border)',
           background: 'var(--bg)', color: 'var(--text)',
           fontSize: 13, outline: 'none',
           transition: 'all 0.15s',

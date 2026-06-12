@@ -34,29 +34,24 @@ function SortableItem({ note, activeNoteId, onSelectNote }: {
       onClick={() => onSelectNote(note.id)}
       style={{
         ...style,
-        display: 'flex', alignItems: 'center', gap: 10,
-        width: '100%', padding: '10px 12px', marginBottom: 4,
-        borderRadius: 8, border: 'none',
+        display: 'flex', alignItems: 'center', gap: 6,
+        width: '100%', padding: '4px 8px', marginBottom: 1,
+        borderRadius: 0, border: 'none',
         background: note.id === activeNoteId ? 'var(--accent-light)' : 'transparent',
         color: note.id === activeNoteId ? 'var(--accent)' : 'var(--text)',
         cursor: viewMode === 'list' ? 'grab' : 'pointer', textAlign: 'left',
         transition: `${transition || ''}, background 0.1s`,
-        fontSize: 13,
+        fontSize: 12,
       }}
     >
-      <span style={{ fontSize: 18, flexShrink: 0 }}>{note.emoji}</span>
+      <span style={{ fontSize: 14, flexShrink: 0 }}>{note.emoji}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
+          fontSize: '12px',
         }}>
           {note.title || 'Sin título'}
-        </div>
-        <div style={{
-          fontSize: 11, opacity: 0.5, overflow: 'hidden',
-          textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {note.content ? note.content.slice(0, 40) : '...'}
         </div>
       </div>
     </button>
