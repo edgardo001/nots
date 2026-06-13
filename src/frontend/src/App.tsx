@@ -106,7 +106,10 @@ export default function App() {
             e.currentTarget.style.color = 'var(--text)'
           }}
         >
-          {sidebarOpen ? '◀' : '▶'}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"
+            style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+            <path d="M2 1L7 5L2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
 
         {/* Contenedor principal con padding dinámico para evitar solapamiento de notas */}
