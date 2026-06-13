@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, createRef } from 'react'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { useNotesStore } from '../../stores/notesStore'
-import { useUIStore } from '../../stores/uiStore'
+import { useUIStore, themeCycle } from '../../stores/uiStore'
 import SearchBar from '../sidebar/SearchBar'
 import StorageIndicator from '../settings/StorageIndicator'
 
@@ -35,6 +35,8 @@ export default function Header({ isMobile }: HeaderProps) {
   const importRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const mobileFileRef = useRef<HTMLInputElement>(null)
+  const desktopFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!importOpen) return
@@ -178,7 +180,7 @@ export default function Header({ isMobile }: HeaderProps) {
                 {viewMode === 'postit' ? '☰ Vista Lista' : '⊞ Vista Post-It'}
               </button>
               <button
-                onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false) }}
+                onClick={() => { setTheme(themeCycle(theme)); setMenuOpen(false) }}
                 aria-label="Cambiar tema"
                 style={{
                   padding: '8px 14px', borderRadius: 0, border: 'none',
@@ -187,7 +189,7 @@ export default function Header({ isMobile }: HeaderProps) {
                   textAlign: 'left', transition: 'all 0.1s',
                 }}
               >
-                {theme === 'dark' ? '☀️ Tema Claro' : '🌙 Tema Oscuro'}
+                {theme === 'dark' ? '☀️ Claro' : theme === 'system' ? '💻 Sistema' : '🌙 Oscuro'}
               </button>
               <button
                 onClick={() => { setMenuOpen(false) }}
@@ -200,21 +202,25 @@ export default function Header({ isMobile }: HeaderProps) {
               >
                 📦 Exportar ZIP
               </button>
-              <label
+              <button
+                onClick={() => mobileFileRef.current?.click()}
                 style={{
-                  padding: '8px 14px', cursor: 'pointer', display: 'block',
-                  fontSize: 13, color: 'var(--text)', fontWeight: 500,
+                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  background: 'transparent', color: 'var(--text)',
+                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  textAlign: 'left', display: 'block', width: '100%',
                 }}
               >
                 📂 Importar .md
-                <input
-                  type="file"
-                  accept=".md"
-                  multiple
-                  onChange={e => { importFiles(e.target.files); setMenuOpen(false) }}
-                  style={{ display: 'none' }}
-                />
-              </label>
+              </button>
+              <input
+                ref={mobileFileRef}
+                type="file"
+                accept=".md"
+                multiple
+                onChange={e => { importFiles(e.target.files); setMenuOpen(false) }}
+                style={{ display: 'none' }}
+              />
             </div>
           )}
         </div>
@@ -252,21 +258,25 @@ export default function Header({ isMobile }: HeaderProps) {
                 >
                   📦 Exportar ZIP
                 </button>
-                <label
+                <button
+                  onClick={() => desktopFileRef.current?.click()}
                   style={{
-                    display: 'block', padding: '10px 14px', cursor: 'pointer',
-                    fontSize: 13, color: 'var(--text)', transition: 'background 0.1s',
+                    display: 'block', width: '100%', padding: '10px 14px',
+                    border: 'none', background: 'transparent', cursor: 'pointer',
+                    textAlign: 'left', fontSize: 13, color: 'var(--text)',
+                    transition: 'background 0.1s',
                   }}
                 >
                   📂 Importar .md
-                  <input
-                    type="file"
-                    accept=".md"
-                    multiple
-                    onChange={e => importFiles(e.target.files)}
-                    style={{ display: 'none' }}
-                  />
-                </label>
+                </button>
+                <input
+                  ref={desktopFileRef}
+                  type="file"
+                  accept=".md"
+                  multiple
+                  onChange={e => importFiles(e.target.files)}
+                  style={{ display: 'none' }}
+                />
               </div>
             )}
           </div>
@@ -285,15 +295,15 @@ export default function Header({ isMobile }: HeaderProps) {
             {viewMode === 'postit' ? '☰ Lista' : '⊞ Post-It'}
           </button>
           <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+            onClick={() => setTheme(themeCycle(theme))}
+            aria-label={`Tema: ${theme}`}
             style={{
               padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
               cursor: 'pointer', fontSize: 15, transition: 'all 0.15s',
             }}
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? '☀️' : theme === 'system' ? '💻' : '🌙'}
           </button>
           <StorageIndicator />
         </nav>

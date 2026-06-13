@@ -56,6 +56,10 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         {...attributes}
         {...listeners}
         onClick={onClick}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Nota: ${note.title || 'Sin título'}`}
         style={{
           ...style,
           display: 'flex', alignItems: 'center', gap: 12,

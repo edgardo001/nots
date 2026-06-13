@@ -3,6 +3,13 @@ import { getSetting, setSetting } from '../db/operations';
 
 const THEME_KEY = 'app:theme';
 
+function resolveTheme(theme: 'light' | 'dark' | 'system'): 'light' | 'dark' {
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme;
+}
+
 function applyTheme(resolved: 'light' | 'dark') {
   document.documentElement.setAttribute('data-theme', resolved);
   const meta = document.querySelector('meta[name="color-scheme"]');
@@ -16,14 +23,24 @@ function applyTheme(resolved: 'light' | 'dark') {
   }
 }
 
+let systemListener: (() => void) | null = null;
+
+function listenSystem(setStore: (resolved: 'light' | 'dark') => void) {
+  if (systemListener) systemListener();
+  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const handler = (e: MediaQueryListEvent) => setStore(e.matches ? 'dark' : 'light');
+  mq.addEventListener('change', handler);
+  systemListener = () => mq.removeEventListener('change', handler);
+}
+
 interface UIState {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
   resolvedTheme: 'light' | 'dark';
   sidebarOpen: boolean;
   showTrash: boolean;
   showSettings: boolean;
 
-  setTheme: (theme: 'light' | 'dark') => Promise<void>;
+  setTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setShowTrash: (show: boolean) => void;
@@ -31,8 +48,16 @@ interface UIState {
   loadTheme: () => Promise<void>;
 }
 
+function themeCycle(theme: 'light' | 'dark' | 'system'): 'light' | 'dark' | 'system' {
+  const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system'];
+  const idx = order.indexOf(theme);
+  return order[(idx + 1) % order.length];
+}
+
+export { themeCycle };
+
 export const useUIStore = create<UIState>((set) => ({
-  theme: 'light',
+  theme: 'system',
   resolvedTheme: 'light',
   sidebarOpen: false,
   showTrash: false,
@@ -40,8 +65,18 @@ export const useUIStore = create<UIState>((set) => ({
 
   setTheme: async (theme) => {
     await setSetting(THEME_KEY, theme);
-    applyTheme(theme);
-    set({ theme, resolvedTheme: theme });
+    const resolved = resolveTheme(theme);
+    applyTheme(resolved);
+    set({ theme, resolvedTheme: resolved });
+    if (theme === 'system') {
+      listenSystem((r) => {
+        applyTheme(r);
+        set({ resolvedTheme: r });
+      });
+    } else if (systemListener) {
+      systemListener();
+      systemListener = null;
+    }
   },
 
   toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
@@ -53,8 +88,15 @@ export const useUIStore = create<UIState>((set) => ({
 
   loadTheme: async () => {
     const setting = await getSetting(THEME_KEY);
-    const theme: 'light' | 'dark' = (setting?.value as 'light' | 'dark') ?? 'light';
-    applyTheme(theme);
-    set({ theme, resolvedTheme: theme });
+    const theme: 'light' | 'dark' | 'system' = (setting?.value as 'light' | 'dark' | 'system') ?? 'system';
+    const resolved = resolveTheme(theme);
+    applyTheme(resolved);
+    set({ theme, resolvedTheme: resolved });
+    if (theme === 'system') {
+      listenSystem((r) => {
+        applyTheme(r);
+        set({ resolvedTheme: r });
+      });
+    }
   },
 }));
