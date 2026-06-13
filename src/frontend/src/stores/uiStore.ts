@@ -25,6 +25,7 @@ interface UIState {
 
   setTheme: (theme: 'light' | 'dark') => Promise<void>;
   toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
   setShowTrash: (show: boolean) => void;
   setShowSettings: (show: boolean) => void;
   loadTheme: () => Promise<void>;
@@ -33,7 +34,7 @@ interface UIState {
 export const useUIStore = create<UIState>((set) => ({
   theme: 'light',
   resolvedTheme: 'light',
-  sidebarOpen: true,
+  sidebarOpen: false,
   showTrash: false,
   showSettings: false,
 
@@ -44,6 +45,7 @@ export const useUIStore = create<UIState>((set) => ({
   },
 
   toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
   setShowTrash: (show) => set({ showTrash: show }),
 
