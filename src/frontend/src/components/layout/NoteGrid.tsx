@@ -100,7 +100,9 @@ export default function NoteGrid() {
   ))
 
   const gridStyle: CSSProperties = {
-    display: 'flex', flexWrap: 'wrap', gap: 16,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: 16,
     animation: 'fadeIn 0.2s ease',
   }
 

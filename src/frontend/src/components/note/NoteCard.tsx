@@ -90,7 +90,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
       onClick={onClick}
       style={{
         ...style,
-        width: 220, minHeight: 190, borderRadius: 0,
+        width: '100%', minHeight: 190, borderRadius: 0,
         background: cardStyle.bg, border: `1px solid ${cardStyle.border}`,
         padding: '18px 16px 14px', cursor: 'grab', color: cardStyle.text,
         display: 'flex', flexDirection: 'column',
