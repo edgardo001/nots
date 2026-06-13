@@ -59,6 +59,13 @@ export default function Sidebar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes])
 
+  useEffect(() => {
+    if (!filtersOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setFiltersOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [filtersOpen])
+
   let filteredNotes = activeNotes
   if (tagFilter) filteredNotes = filteredNotes.filter(n => n.tags.includes(tagFilter))
   if (colorFilter) filteredNotes = filteredNotes.filter(n => n.color === colorFilter)

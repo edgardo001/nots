@@ -61,26 +61,20 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
   }, [note])
 
   useEffect(() => {
-    if (!emojiOpen) return
-    const handler = (e: MouseEvent) => {
-      if (emojiRef.current && !emojiRef.current.contains(e.target as Node)) {
-        setEmojiOpen(false)
-      }
+    const close = () => { setEmojiOpen(false); setColorOpen(false); setVersionsOpen(false) }
+    if (!emojiOpen && !colorOpen && !versionsOpen) return
+    const mouseHandler = (e: MouseEvent) => {
+      if (emojiOpen && emojiRef.current && !emojiRef.current.contains(e.target as Node)) setEmojiOpen(false)
+      if (colorOpen && colorRef.current && !colorRef.current.contains(e.target as Node)) setColorOpen(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [emojiOpen])
-
-  useEffect(() => {
-    if (!colorOpen) return
-    const handler = (e: MouseEvent) => {
-      if (colorRef.current && !colorRef.current.contains(e.target as Node)) {
-        setColorOpen(false)
-      }
+    const keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    document.addEventListener('mousedown', mouseHandler)
+    document.addEventListener('keydown', keyHandler)
+    return () => {
+      document.removeEventListener('mousedown', mouseHandler)
+      document.removeEventListener('keydown', keyHandler)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [colorOpen])
+  }, [emojiOpen, colorOpen, versionsOpen])
 
   const loadVersions = useCallback(async () => {
     if (!noteId || versionsLoaded) return
@@ -270,6 +264,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
           onChange={e => setTitle(e.target.value)}
           onBlur={save}
           placeholder="Título"
+          aria-label="Título de la nota"
           style={{
             flex: 1, padding: isMobile ? '8px 10px' : '10px 14px', borderRadius: 6,
             border: '1px solid rgba(0,0,0,0.10)',
@@ -370,6 +365,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
               }
             }}
             placeholder="+ etiqueta"
+            aria-label="Agregar etiqueta"
             style={{
               padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',
@@ -381,7 +377,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             value={note.folder === 'default' ? '' : note.folder}
             onChange={e => updateNote(note.id, { folder: e.target.value || 'default' })}
             placeholder="carpeta"
-            aria-label="Carpeta"
+            aria-label="Carpeta de la nota"
             style={{
               padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',

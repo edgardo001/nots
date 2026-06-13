@@ -39,26 +39,19 @@ export default function Header({ isMobile }: HeaderProps) {
   const desktopFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!importOpen) return
-    const handler = (e: MouseEvent) => {
-      if (importRef.current && !importRef.current.contains(e.target as Node)) {
-        setImportOpen(false)
-      }
+    if (!importOpen && !menuOpen) return
+    const mouseHandler = (e: MouseEvent) => {
+      if (importOpen && importRef.current && !importRef.current.contains(e.target as Node)) setImportOpen(false)
+      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [importOpen])
-
-  useEffect(() => {
-    if (!menuOpen || !isMobile) return
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false)
-      }
+    const keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') { setImportOpen(false); setMenuOpen(false) } }
+    document.addEventListener('mousedown', mouseHandler)
+    document.addEventListener('keydown', keyHandler)
+    return () => {
+      document.removeEventListener('mousedown', mouseHandler)
+      document.removeEventListener('keydown', keyHandler)
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [menuOpen, isMobile])
+  }, [importOpen, menuOpen])
 
   const exportAll = useCallback(async () => {
     const zip = new JSZip()
