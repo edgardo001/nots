@@ -107,6 +107,7 @@ input, textarea, select, button {
   }
   main {
     padding: 12px !important;
+    padding-left: 42px !important;
   }
   .note-card-postit {
     width: 100% !important;

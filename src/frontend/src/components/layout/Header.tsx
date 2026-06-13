@@ -31,7 +31,6 @@ export default function Header({ isMobile }: HeaderProps) {
   const addNote = useNotesStore(s => s.addNote)
   const theme = useUIStore(s => s.theme)
   const setTheme = useUIStore(s => s.setTheme)
-  const toggleSidebar = useUIStore(s => s.toggleSidebar)
   const [importOpen, setImportOpen] = useState(false)
   const importRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -154,17 +153,6 @@ export default function Header({ isMobile }: HeaderProps) {
               padding: '12px', zIndex: 30, display: 'flex', flexDirection: 'column', gap: 4,
               minWidth: 180,
             }}>
-              <button
-                onClick={() => { toggleSidebar(); setMenuOpen(false) }}
-                style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
-                  background: 'transparent', color: 'var(--text)',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                  textAlign: 'left', transition: 'all 0.1s',
-                }}
-              >
-                ◀ / ▶ Sidebar
-              </button>
               <button
                 onClick={() => { setImportOpen(!importOpen); setMenuOpen(false) }}
                 aria-label="Exportar o importar notas"

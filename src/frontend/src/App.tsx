@@ -70,18 +70,18 @@ export default function App() {
           <Sidebar />
         </div>
 
-        {/* Pestaña flotante — oculta en móvil, el toggle está en el menú hamburguesa */}
-        {!isMobile && <button
+        {/* Pestaña flotante para abrir/cerrar sidebar */}
+        <button
           onClick={toggleSidebar}
           aria-label={sidebarOpen ? 'Esconder barra lateral' : 'Mostrar barra lateral'}
           aria-expanded={sidebarOpen}
           style={{
             position: 'absolute',
-            left: sidebarOpen ? 260 : 0,
+            left: sidebarOpen ? 260 : (isMobile ? 6 : 0),
             top: '50%',
             transform: 'translateY(-50%)',
-            width: '20px',
-            height: '64px',
+            width: isMobile && !sidebarOpen ? 28 : 20,
+            height: isMobile && !sidebarOpen ? 72 : 64,
             background: 'var(--surface)',
             border: '1px solid var(--border)',
             borderLeft: sidebarOpen ? 'none' : '1px solid var(--border)',
@@ -94,8 +94,9 @@ export default function App() {
             padding: 0,
             fontSize: '9px',
             lineHeight: 1,
-            boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
+            boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : '2px 0 12px rgba(0,0,0,0.08)',
             transition: 'left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.1s, color 0.1s',
+            opacity: sidebarOpen || !isMobile ? 1 : 0.85,
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = 'var(--accent)'
@@ -106,11 +107,11 @@ export default function App() {
             e.currentTarget.style.color = 'var(--text)'
           }}
         >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"
+          <svg width={isMobile && !sidebarOpen ? 14 : 10} height={isMobile && !sidebarOpen ? 14 : 10} viewBox="0 0 10 10" fill="none" aria-hidden="true"
             style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
             <path d="M2 1L7 5L2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </button>}
+        </button>
 
         {/* Contenedor principal con padding dinámico para evitar solapamiento de notas */}
         <main style={{
