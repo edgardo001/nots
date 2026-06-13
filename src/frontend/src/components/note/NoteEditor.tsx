@@ -23,9 +23,10 @@ const NOTE_COLORS = [
 
 interface NoteEditorProps {
   noteId: string
+  isMobile?: boolean
 }
 
-export default function NoteEditor({ noteId }: NoteEditorProps) {
+export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
   const notes = useNotesStore(s => s.notes)
   const updateNote = useNotesStore(s => s.updateNote)
   const setActiveNote = useNotesStore(s => s.setActiveNote)
@@ -153,18 +154,19 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-        <div ref={emojiRef} style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', gap: isMobile ? 4 : 8, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={() => setEmojiOpen(!emojiOpen)}
             aria-label="Seleccionar emoji"
             aria-expanded={emojiOpen}
             style={{
-              width: 44, height: 44, borderRadius: 6,
+              width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
               background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-              fontSize: 22, display: 'flex', alignItems: 'center',
+              fontSize: isMobile ? 18 : 22, display: 'flex', alignItems: 'center',
               justifyContent: 'center', transition: 'all 0.15s',
+              lineHeight: 1,
             }}
           >
             {emoji}
@@ -175,8 +177,8 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
               zIndex: 20, background: 'var(--surface)',
               border: '1px solid var(--border)',
               borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              padding: 10, width: 270, display: 'grid',
-              gridTemplateColumns: 'repeat(9, 1fr)', gap: 2,
+              padding: 10, width: isMobile ? 216 : 270, display: 'grid',
+              gridTemplateColumns: `repeat(${isMobile ? 8 : 9}, 1fr)`, gap: 2,
               animation: 'fadeIn 0.1s ease',
             }}>
               {EMOJIS.map(e => (
@@ -198,16 +200,16 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           )}
         </div>
 
-        <div ref={colorRef} style={{ position: 'relative' }}>
+        <div ref={colorRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={() => setColorOpen(!colorOpen)}
             aria-label="Seleccionar color de nota"
             aria-expanded={colorOpen}
             style={{
-              width: 44, height: 44, borderRadius: 6,
+              width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 6,
               border: '2px solid rgba(0,0,0,0.15)',
               background: note.color || NOTE_COLORS[0],
-              cursor: 'pointer', transition: 'all 0.15s',
+              cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
             }}
             title="Color de nota"
           />
@@ -249,12 +251,12 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onClick={() => imageInputRef.current?.click()}
           aria-label="Insertar imagen"
           style={{
-            width: 44, height: 44, borderRadius: 6,
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 6,
             border: '1px solid rgba(0,0,0,0.10)',
             background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-            fontSize: 18, display: 'flex', alignItems: 'center',
+            fontSize: isMobile ? 14 : 18, display: 'flex', alignItems: 'center',
             justifyContent: 'center', transition: 'all 0.15s',
-            flexShrink: 0,
+            flexShrink: 0, lineHeight: 1,
           }}
           title="Insertar imagen"
         >
@@ -268,21 +270,22 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onBlur={save}
           placeholder="Título"
           style={{
-            flex: 1, padding: '10px 14px', borderRadius: 6,
+            flex: 1, padding: isMobile ? '8px 10px' : '10px 14px', borderRadius: 6,
             border: '1px solid rgba(0,0,0,0.10)',
             background: 'transparent',
             boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
-            color: 'inherit', fontSize: 20, fontWeight: 700, outline: 'none',
+            color: 'inherit', fontSize: isMobile ? 16 : 20, fontWeight: 700,
+            outline: 'none', minWidth: isMobile ? 100 : undefined,
           }}
         />
         <button
           onClick={() => setPreview(!preview)}
           aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
           style={{
-            width: 44, height: 44, borderRadius: 6,
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 6,
             border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
             background: preview ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
-            cursor: 'pointer', fontSize: 16, lineHeight: 1, flexShrink: 0,
+            cursor: 'pointer', fontSize: isMobile ? 14 : 16, lineHeight: 1, flexShrink: 0,
             color: preview ? 'var(--text)' : 'var(--text-secondary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s',
@@ -295,10 +298,10 @@ export default function NoteEditor({ noteId }: NoteEditorProps) {
           onClick={() => setActiveNote(null)}
           aria-label="Cerrar editor"
           style={{
-            width: 44, height: 44, borderRadius: 6,
+            width: isMobile ? 36 : 44, height: isMobile ? 36 : 44, borderRadius: 6,
             border: '1px solid rgba(0,0,0,0.10)',
             background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-            fontSize: 18, lineHeight: 1, flexShrink: 0,
+            fontSize: isMobile ? 14 : 18, lineHeight: 1, flexShrink: 0,
             color: 'var(--text-secondary)', display: 'flex',
             alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.15s',
