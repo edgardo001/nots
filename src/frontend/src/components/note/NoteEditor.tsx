@@ -223,10 +223,11 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
               gridTemplateColumns: 'repeat(6, 1fr)', gap: 4,
               animation: 'fadeIn 0.1s ease',
             }}>
-              {NOTE_COLORS.map(c => (
+              {NOTE_COLORS.map((c, i) => (
                 <button
                   key={c}
                   onClick={() => { updateNote(note.id, { color: c }); setColorOpen(false); }}
+                  aria-label={`Color de fondo ${i + 1}`}
                   style={{
                     width: 24, height: 24, borderRadius: 0,
                     border: c === (note.color || NOTE_COLORS[0])
@@ -369,6 +370,18 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
               }
             }}
             placeholder="+ etiqueta"
+            style={{
+              padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
+              background: 'transparent', color: 'var(--text-secondary)',
+              fontSize: 12, width: 90, outline: 'none',
+            }}
+          />
+          <input
+            type="text"
+            value={note.folder === 'default' ? '' : note.folder}
+            onChange={e => updateNote(note.id, { folder: e.target.value || 'default' })}
+            placeholder="carpeta"
+            aria-label="Carpeta"
             style={{
               padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',

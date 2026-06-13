@@ -1,12 +1,15 @@
 import './index.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNotesStore } from './stores/notesStore'
 import { useUIStore } from './stores/uiStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { deleteOldTrash } from './db/operations'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import NoteGrid from './components/layout/NoteGrid'
 import NoteEditor from './components/note/NoteEditor'
+
+const SYNC_CHANNEL = 'notas-app-sync'
 
 export default function App() {
   const loadNotes = useNotesStore(s => s.loadNotes)
@@ -22,20 +25,48 @@ export default function App() {
   const addNote = useNotesStore(s => s.addNote)
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const channelRef = useRef<BroadcastChannel | null>(null)
+  const [storageWarning, setStorageWarning] = useState(false)
 
   useKeyboardShortcuts()
 
   useEffect(() => {
     loadNotes()
     loadTheme()
+    deleteOldTrash(7)
+
+    if (navigator.storage?.estimate) {
+      navigator.storage.estimate().then(est => {
+        if (est.usage != null && est.quota != null && (est.usage / est.quota) > 0.8) {
+          setStorageWarning(true)
+        }
+      })
+    }
+
+    const channel = new BroadcastChannel(SYNC_CHANNEL)
+    channelRef.current = channel
+    channel.onmessage = () => {
+      loadNotes()
+      useUIStore.getState().loadTheme()
+    }
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
     }
 
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      channel.close()
+    }
   }, [loadNotes, loadTheme])
+
+  useEffect(() => {
+    const unsub = useNotesStore.subscribe(() => {
+      channelRef.current?.postMessage('notes:updated')
+    })
+    return () => unsub()
+  }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', resolvedTheme)
@@ -51,6 +82,24 @@ export default function App() {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {storageWarning && (
+        <div role="alert" style={{
+          background: '#e85d3a', color: '#fff', padding: '8px 16px',
+          fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+        }}>
+          <span>⚠️ Almacenamiento casi lleno. Considera exportar tus notas y eliminar las que no necesites.</span>
+          <button
+            onClick={() => setStorageWarning(false)}
+            aria-label="Descartar advertencia"
+            style={{
+              background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff',
+              padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11,
+            }}
+          >
+            X
+          </button>
+        </div>
+      )}
       <Header isMobile={isMobile} />
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         
@@ -167,24 +216,24 @@ export default function App() {
         </div>
       )}
 
-      {isMobile && (
-        <button
-          onClick={addNote}
-          aria-label="Crear nueva nota"
-          style={{
-            position: 'fixed', bottom: 20, right: 20,
-            width: 56, height: 56, borderRadius: '50%',
-            background: 'var(--accent)', color: '#fff',
-            border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-            fontSize: 24, zIndex: 100,
-            transition: 'transform 0.15s, box-shadow 0.15s',
-          }}
-        >
-          +
-        </button>
-      )}
+      <button
+        onClick={addNote}
+        aria-label="Crear nueva nota"
+        style={{
+          position: 'fixed', bottom: 20, right: 20,
+          width: 56, height: 56, borderRadius: '50%',
+          background: 'var(--accent)', color: '#fff',
+          border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+          fontSize: 24, zIndex: 100,
+          transition: 'transform 0.15s, box-shadow 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.3)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)' }}
+      >
+        +
+      </button>
     </div>
   )
 }

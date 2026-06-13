@@ -34,6 +34,8 @@ export default function Sidebar() {
   const [attachmentOnly, setAttachmentOnly] = useState<boolean>(false)
   const [attachmentMap, setAttachmentMap] = useState<Record<string, boolean>>({})
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [groupBy, setGroupBy] = useState<'none' | 'folder' | 'tag'>('none')
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -74,6 +76,7 @@ export default function Sidebar() {
 
   const allTags = [...new Set(activeNotes.flatMap(n => n.tags))].sort()
   const allColors = [...new Set(activeNotes.map(n => n.color))].sort()
+  const allFolders = [...new Set(activeNotes.map(n => n.folder))].sort()
   const enableSidebarDnd = viewMode === 'list' && !showTrash
 
   const activeFilterCount = [colorFilter, dateFrom, dateTo, attachmentOnly].filter(Boolean).length
@@ -199,6 +202,7 @@ export default function Sidebar() {
                     key={col}
                     onClick={() => setColorFilter(col === colorFilter ? null : col)}
                     aria-pressed={col === colorFilter}
+                    aria-label={`Filtrar por color ${col}`}
                     title={col}
                     style={{
                       width: 16, height: 16,
@@ -289,6 +293,7 @@ export default function Sidebar() {
           {tagFilter && (
             <button
               onClick={() => setTagFilter(null)}
+              aria-label={`Quitar filtro de etiqueta ${tagFilter}`}
               style={{
                 padding: '3px 8px', borderRadius: 12,
                 border: '1px solid var(--accent)', background: 'var(--accent-light)',
@@ -322,24 +327,94 @@ export default function Sidebar() {
         </div>
       )}
 
+      {/* Agrupar por */}
+      {allFolders.length > 1 && (
+        <div style={{ display: 'flex', gap: 4, padding: '0 12px 8px' }}>
+          <select
+            value={groupBy}
+            onChange={e => setGroupBy(e.target.value as 'none' | 'folder' | 'tag')}
+            aria-label="Agrupar notas por"
+            style={{
+              flex: 1, padding: '4px 6px', borderRadius: 6,
+              border: '1px solid var(--border)', background: 'var(--bg)',
+              color: 'var(--text-secondary)', fontSize: 10, cursor: 'pointer',
+            }}
+          >
+            <option value="none">Sin agrupar</option>
+            <option value="folder">Por carpeta</option>
+            <option value="tag">Por etiqueta</option>
+          </select>
+        </div>
+      )}
+
       {/* Lista de notas */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
-        {enableSidebarDnd ? (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
-              <NoteList
-                notes={filteredNotes}
-                activeNoteId={activeNoteId}
-                onSelectNote={id => setActiveNote(id)}
-              />
-            </SortableContext>
-          </DndContext>
+        {groupBy === 'none' ? (
+          enableSidebarDnd ? (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={filteredNotes.map(n => n.id)} strategy={verticalListSortingStrategy}>
+                <NoteList
+                  notes={filteredNotes}
+                  activeNoteId={activeNoteId}
+                  onSelectNote={id => setActiveNote(id)}
+                />
+              </SortableContext>
+            </DndContext>
+          ) : (
+            <NoteList
+              notes={filteredNotes}
+              activeNoteId={activeNoteId}
+              onSelectNote={id => setActiveNote(id)}
+            />
+          )
         ) : (
-          <NoteList
-            notes={filteredNotes}
-            activeNoteId={activeNoteId}
-            onSelectNote={id => setActiveNote(id)}
-          />
+          (() => {
+            const groups = new Map<string, typeof filteredNotes>([])
+            const getKey = (n: typeof filteredNotes[0]) => groupBy === 'folder' ? n.folder : (n.tags[0] || 'Sin etiqueta')
+            for (const n of filteredNotes) {
+              const key = getKey(n)
+              if (!groups.has(key)) groups.set(key, [])
+              groups.get(key)!.push(n)
+            }
+            return (
+              <div>
+                {Array.from(groups.entries()).map(([group, groupedNotes]) => {
+                  const isCollapsed = collapsedGroups.has(group)
+                  return (
+                    <div key={group}>
+                      <button
+                        onClick={() => {
+                          const next = new Set(collapsedGroups)
+                          if (isCollapsed) { next.delete(group) } else { next.add(group) }
+                          setCollapsedGroups(next)
+                        }}
+                        aria-expanded={!isCollapsed}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          width: '100%', padding: '4px 8px', marginBottom: 1,
+                          border: 'none', background: 'transparent',
+                          color: 'var(--text-secondary)', cursor: 'pointer',
+                          fontSize: 10, fontWeight: 600, textTransform: 'uppercase',
+                          letterSpacing: '0.04em', textAlign: 'left',
+                        }}
+                      >
+                        <span style={{ fontSize: 9 }}>{isCollapsed ? '▶' : '▼'}</span>
+                        <span>{group}</span>
+                        <span style={{ marginLeft: 'auto', opacity: 0.5, fontWeight: 400 }}>{groupedNotes.length}</span>
+                      </button>
+                      {!isCollapsed && (
+                        <NoteList
+                          notes={groupedNotes}
+                          activeNoteId={activeNoteId}
+                          onSelectNote={id => setActiveNote(id)}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()
         )}
       </div>
 
@@ -348,8 +423,8 @@ export default function Sidebar() {
         onClick={() => {
           const next = !showTrash
           setShowTrash(next)
-          if (next) useNotesStore.getState().loadTrash()
-          else useNotesStore.getState().loadNotes()
+          if (next) { useNotesStore.getState().loadTrash() }
+          else { useNotesStore.getState().loadNotes() }
         }}
         aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
         aria-expanded={showTrash}
