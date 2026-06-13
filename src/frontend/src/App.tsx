@@ -70,8 +70,8 @@ export default function App() {
           <Sidebar />
         </div>
 
-        {/* Pestaña flotante fuera del sidebar para que sea visible cuando está oculto */}
-        <button
+        {/* Pestaña flotante — oculta en móvil, el toggle está en el menú hamburguesa */}
+        {!isMobile && <button
           onClick={toggleSidebar}
           aria-label={sidebarOpen ? 'Esconder barra lateral' : 'Mostrar barra lateral'}
           aria-expanded={sidebarOpen}
@@ -110,7 +110,7 @@ export default function App() {
             style={{ transform: sidebarOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
             <path d="M2 1L7 5L2 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </button>
+        </button>}
 
         {/* Contenedor principal con padding dinámico para evitar solapamiento de notas */}
         <main style={{
