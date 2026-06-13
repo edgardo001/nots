@@ -1,4 +1,7 @@
 name = "nots"
 compatibility_date = "2026-06-13"
-workers_dev = false
-preview_urls = false
+pages_build_output_dir = "dist"
+pages_build_command = "bun install && bun run build"
+
+[env.production]
+name = "nots"
