@@ -87,4 +87,17 @@ bun run preview
 
 ---
 
+## ☁️ Despliegue en Cloudflare Pages
+
+### Configuración
+
+Para desplegar **nots** en Cloudflare Pages, utiliza la siguiente configuración:
+
+*   **Comando de compilación:** `bun run build`
+*   **Comando de implementación:** `npx wrangler deploy dist`
+*   **Directorio raíz:** `src/frontend`
+*   **Comando de implementación de rama no de producción (Opcional):** `npx wrangler versions upload`
+
+---
+
 ## ⬛ nots — Deja de configurar tu espacio de trabajo. Solo escribe.
