@@ -59,58 +59,44 @@ specs/001-note-taking-app/
 ### Source Code
 
 ```text
-src/
-├── frontend/            # React 19 + Vite app
-│   ├── app/
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── Header.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── NoteGrid.tsx
-│   │   ├── note/
-│   │   │   ├── NoteCard.tsx
-│   │   │   ├── NoteEditor.tsx
-│   │   │   └── NotePreview.tsx
-│   │   ├── sidebar/
-│   │   │   ├── NoteList.tsx
-│   │   │   ├── SortControls.tsx
-│   │   │   └── SearchBar.tsx
-│   │   ├── trash/
-│   │   │   └── TrashView.tsx
-│   │   ├── tags/
-│   │   │   ├── TagManager.tsx
-│   │   │   └── TagFilter.tsx
-│   │   ├── settings/
-│   │   │   ├── ThemeToggle.tsx
-│   │   │   └── StorageIndicator.tsx
-│   │   └── ui/
-│   │       ├── Button.tsx
-│   │       ├── Modal.tsx
-│   │       ├── ColorPicker.tsx
-│   │       └── EmojiPicker.tsx
-│   ├── stores/
-│   │   ├── notesStore.ts
-│   │   ├── uiStore.ts
-│   │   └── trashStore.ts
-│   ├── db/
-│   │   ├── schema.ts
-│   │   └── operations.ts
-│   ├── utils/
-│   │   ├── markdown.ts
-│   │   ├── dates.ts
-│   │   └── storage.ts
+src/frontend/            # React 19 + Vite app
+├── src/
+│   ├── main.tsx                    # Entry point
+│   ├── App.tsx                     # Root layout
+│   ├── index.css                   # Global styles
+│   ├── vite-env.d.ts
 │   ├── types/
-│   │   └── index.ts
-│   └── hooks/
-│       ├── useNotes.ts
-│       ├── useSearch.ts
-│       └── useDrag.ts
-└── docker/              # Docker config
-    ├── Dockerfile
-    └── nginx.conf
+│   │   └── index.ts                # Note, NoteVersion, Attachment, AppSettings
+│   ├── db/
+│   │   ├── schema.ts               # IndexedDB setup (idb)
+│   │   └── operations.ts           # CRUD + trash purge + versioning + attachments
+│   ├── stores/
+│   │   ├── notesStore.ts           # Zustand: notes, trash, search, sort, versions
+│   │   └── uiStore.ts              # Zustand: theme (light/dark/system), sidebar
+│   ├── hooks/
+│   │   └── useKeyboardShortcuts.ts # Global keyboard shortcuts
+│   ├── styles/
+│   │   └── design-system.css       # CSS custom properties + utility classes
+│   └── components/
+│       ├── layout/
+│       │   ├── Header.tsx          # Logo, search, import/export, view/theme toggle
+│       │   ├── Sidebar.tsx         # Sort, filters, tags, NoteList, trash toggle
+│       │   └── NoteGrid.tsx        # Main content: postit grid + list view
+│       ├── note/
+│       │   ├── NoteCard.tsx        # Post-it card / list item
+│       │   └── NoteEditor.tsx      # Full modal editor (preview, tags, versions, colors, emoji)
+│       ├── sidebar/
+│       │   ├── NoteList.tsx        # Sortable list items for sidebar
+│       │   └── SearchBar.tsx       # Search input
+│       └── settings/
+│           └── StorageIndicator.tsx # Storage quota ring
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tsconfig.json / tsconfig.app.json
 ```
+
+**Nota**: Componentes como NotePreview, SortControls, TrashView, TagManager, TagFilter, ThemeToggle, Button, Modal, ColorPicker, EmojiPicker están inlined dentro de sus padres. Los stores trashStore y hooks useNotes/useSearch/useDrag están inlined en notesStore/App.
 
 ## Complexity Tracking
 
