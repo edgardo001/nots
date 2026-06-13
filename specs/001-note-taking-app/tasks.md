@@ -134,6 +134,23 @@
 
 ---
 
+## Phase 10: Mobile Responsiveness
+
+**Purpose**: Adapt the entire UI for mobile devices (<768px)
+
+- [x] T038 Make sidebar start closed on mobile, auto-open on desktop in `src/frontend/src/stores/uiStore.ts` and `src/frontend/src/App.tsx`
+- [x] T039 Collapse nav controls (import/export, view mode, theme, storage) behind a ☰ hamburger menu on mobile in `src/frontend/src/components/layout/Header.tsx`
+- [x] T040 Make NoteEditor modal full-screen on mobile (no border-radius, 100% height) in `src/frontend/src/App.tsx`
+- [x] T041 Reduce title font-size from 20px to 16px and button sizes from 44px to 36px on mobile in `src/frontend/src/components/note/NoteEditor.tsx`
+- [x] T042 Change NoteGrid from flex-wrap to CSS Grid (`auto-fill, minmax(200px, 1fr)`) for responsive cards in `src/frontend/src/components/layout/NoteGrid.tsx`
+- [x] T043 Add emoji font-family fallback for mobile in `src/frontend/src/index.css`
+- [x] T044 Fix search bar width on mobile (remove max-width restriction, set 16px font) in `src/frontend/src/styles/design-system.css`
+- [x] T045 Move sidebar toggle tab outside sidebar container so it's visible when sidebar is closed in `src/frontend/src/App.tsx`
+- [x] T046 Replace emoji logo with SVG icon in `src/frontend/src/components/layout/Header.tsx`
+- [x] T047 Reduce header height to 48px and padding on mobile via media query in `src/frontend/src/styles/design-system.css`
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

@@ -129,6 +129,13 @@ Como usuario, quiero cambiar el color de fondo de mis notas y asignarles un emoj
 - **FR-026**: Sistema MUST mostrar indicador de uso de almacenamiento
 - **FR-027**: Sistema MUST usar exclusivamente dependencias con licencia MIT, Apache-2.0, BSD, ISC o CC0-1.0
 - **FR-028**: Sistema MUST guardar notas como Markdown con frontmatter YAML pensando en futura sincronización
+- **FR-029**: Sistema MUST ser responsive: sidebar cerrado por defecto en móvil (<768px), abierto en escritorio
+- **FR-030**: Sistema MUST mostrar un botón ☰ en móvil que colapsa los controles de navegación (import/export, vista, tema) en un menú desplegable
+- **FR-031**: Sistema MUST mostrar el modal del editor en pantalla completa en móvil (100% ancho/alto, sin border-radius)
+- **FR-032**: Sistema MUST usar CSS Grid para las tarjetas en móvil para que ocupen todo el ancho disponible
+- **FR-033**: Sistema MUST renderizar emojis correctamente en móvil usando font-family fallback (Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji)
+- **FR-034**: Sistema MUST usar font-size 16px en inputs de búsqueda en móvil para evitar zoom automático en iOS
+- **FR-035**: Sistema MUST esconder el subtítulo del header (`hide-mobile`) en dispositivos móviles
 
 ### Key Entities
 
@@ -152,7 +159,7 @@ Como usuario, quiero cambiar el color de fondo de mis notas y asignarles un emoj
 ## Assumptions
 
 - Usuarios tienen un navegador moderno (Chrome, Edge, Firefox, Safari actual) con soporte para IndexedDB y Service Workers
-- Mobile support está fuera de alcance para v1 (responsive pero no mobile-first)
+- Mobile support se implementó en v1 incluyendo responsive design, menú colapsable en header, modal full-screen, sidebar cerrado por defecto con pestaña de apertura flotante, y grid adaptativo
 - No se requiere autenticación de usuarios ni sincronización cloud en v1
 - El límite de almacenamiento de IndexedDB (~50% del disco disponible) es suficiente para el caso de uso típico
 - Tamaño máximo por adjunto: 10MB

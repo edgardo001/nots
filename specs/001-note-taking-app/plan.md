@@ -115,3 +115,36 @@ src/
 ## Complexity Tracking
 
 Sin violaciones — la estructura es plana y se ajusta a los principios de la constitución.
+
+## Mobile Responsiveness Learnings
+
+### Sidebar Strategy
+- El sidebar se posiciona con `position: absolute` y se desliza con `transform: translateX()`. 
+- La pestaña de toggle debe estar FUERA del contenedor del sidebar para ser visible cuando el sidebar está oculto (`translateX(-280px)`).
+- La pestaña se posiciona con `position: absolute; left: sidebarOpen ? 260 : 0` para que cuando el sidebar está abierto, la pestaña esté pegada a su borde derecho (el aside del Sidebar mide 260px).
+- En escritorio el sidebar se abre automáticamente; en móvil se cierra por defecto.
+- Detección de mobile via `useState(window.innerWidth < 768)` + `resize` listener.
+
+### Mobile Modal Approach
+- El modal del editor pasa a ser full-screen en móvil: `width: 100%; height: 100%; maxHeight: 100%; borderRadius: 0; boxShadow: none; padding: 16px`.
+- El backdrop (`inset: 0`) ya está en su lugar.
+
+### Header Responsive
+- En desktop: [logo] [search] [controles visibles]
+- En móvil: [logo] [search flex:1] [☰ colapsable con controles]
+- Input search con `font-size: 16px` en móvil para evitar zoom automático de iOS.
+- Search container `max-width: none` en móvil para que ocupe el espacio disponible.
+- Altura del header reducida a 48px en móvil.
+
+### Grid y Cards
+- CSS Grid con `auto-fill, minmax(200px, 1fr)` reemplazó a `flex-wrap` para que las cards ocupen todo el ancho disponible.
+- Cards cambian de `width: 220px` (fijo) a `width: 100%` (el grid controla el tamaño).
+
+### Emojis en Móvil
+- Algunos navegadores móviles no renderizan emojis con la font-family de Space Grotesk.
+- Se agregó fallback: `font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`.
+- Los botones emoji necesitan `line-height: 1` para evitar corte vertical.
+
+### Logo SVG
+- El emoji ⬛ no es escalable ni consistente entre plataformas.
+- Se reemplazó por un SVG inline de 20x20 representando un documento (rect + líneas) que se adapta al `currentColor`.
