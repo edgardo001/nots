@@ -56,3 +56,10 @@ input, textarea, select, button {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Emoji rendering fix for mobile */
+[aria-label="Seleccionar emoji"],
+[class*="emoji"] span,
+span:has(> img[alt=""]) {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
