@@ -19,6 +19,7 @@ export default function App() {
   const sidebarOpen = useUIStore(s => s.sidebarOpen)
   const setSidebarOpen = useUIStore(s => s.setSidebarOpen)
   const toggleSidebar = useUIStore(s => s.toggleSidebar)
+  const addNote = useNotesStore(s => s.addNote)
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
@@ -164,6 +165,25 @@ export default function App() {
             <NoteEditor noteId={activeNoteId} isMobile={isMobile} />
           </div>
         </div>
+      )}
+
+      {isMobile && (
+        <button
+          onClick={addNote}
+          aria-label="Crear nueva nota"
+          style={{
+            position: 'fixed', bottom: 20, right: 20,
+            width: 56, height: 56, borderRadius: '50%',
+            background: 'var(--accent)', color: '#fff',
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
+            fontSize: 24, zIndex: 100,
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+        >
+          +
+        </button>
       )}
     </div>
   )
