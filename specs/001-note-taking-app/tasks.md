@@ -130,7 +130,7 @@
 
 - [x] T035 Implement key shortcuts hook in `src/frontend/src/hooks/useKeyboardShortcuts.ts`
 - [x] T036 Write unit tests for Zustand stores and DB operations in `src/frontend/src/stores/notesStore.test.ts` and `src/frontend/src/stores/uiStore.test.ts`
-- [x] T037 Validate WCAG AA accessibility compliance in layout components (audit completed; critical issues fixed: color filter/picker labels, tag clear label, list view keyboard access, hidden file inputs; known medium/low items documented)
+- [x] T037 Validate WCAG AA accessibility compliance in layout components (audit completed; all critical + medium/low issues fixed: color filter/picker labels, tag clear label, list view keyboard access, hidden file inputs, Escape key dropdowns, contrast ratios, input labels)
 
 ---
 
