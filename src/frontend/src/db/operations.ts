@@ -5,6 +5,12 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
+const DEFAULT_EMOJIS = ['📝', '💡', '⭐', '🎯', '🔥', '✅', '📌', '💪', '🎨', '📚', '🌈', '✨', '🌱', '🚀', '💻', '🎵', '📅', '🔔', '📋', '❤️'];
+
+function randomEmoji(): string {
+  return DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)];
+}
+
 export async function getAllNotes(): Promise<Note[]> {
   const db = await getDB();
   const notes = await db.getAll('notes');
@@ -19,7 +25,7 @@ export async function getNote(id: string): Promise<Note | undefined> {
 }
 
 export async function addNote(
-  partial?: Partial<Pick<Note, 'title' | 'content' | 'color' | 'emoji' | 'folder' | 'tags' | 'createdLat' | 'createdLng' | 'updatedLat' | 'updatedLng'>>
+  partial?: Partial<Pick<Note, 'title' | 'content' | 'color' | 'emoji' | 'folder' | 'tags' | 'createdLat' | 'createdLng' | 'updatedLat' | 'updatedLng' | 'author'>>
 ): Promise<Note> {
   const db = await getDB();
   const allNotes = await db.getAll('notes');
@@ -31,7 +37,7 @@ export async function addNote(
     content: partial?.content ?? '',
     tags: partial?.tags ?? [],
     color: partial?.color ?? '#FFE4B5',
-    emoji: partial?.emoji ?? '📝',
+    emoji: partial?.emoji ?? randomEmoji(),
     folder: partial?.folder ?? 'default',
     createdAt: nowISO(),
     updatedAt: nowISO(),
@@ -41,6 +47,7 @@ export async function addNote(
     createdLng: partial?.createdLng,
     updatedLat: partial?.updatedLat,
     updatedLng: partial?.updatedLng,
+    author: partial?.author ?? null,
   };
 
   await db.add('notes', note);
@@ -188,7 +195,34 @@ export async function getAttachmentsForNote(noteId: string): Promise<Attachment[
   return db.getAllFromIndex('attachments', 'noteId', noteId);
 }
 
+export async function deleteVersion(id: string): Promise<void> {
+  const db = await getDB();
+  await db.delete('versions', id);
+}
+
 export async function deleteAttachment(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('attachments', id);
+}
+
+export async function deleteAllNotes(): Promise<void> {
+  const db = await getDB();
+  await db.clear('notes');
+  await db.clear('versions');
+  await db.clear('attachments');
+  await db.clear('settings');
+}
+
+export async function seedSampleNotes(): Promise<void> {
+  const samples = [
+    { title: '👋 Bienvenido a nots', content: '# Bienvenido\n\nEsta es tu app de notas. **Características:**\n\n- ✏️ Edición Markdown\n- 🏷️ Etiquetas\n- 🎨 Colores personalizados\n- 📋 Listas de tareas\n- 📦 Exportación ZIP\n\n🔒 **Tus notas son seguras** — todo se almacena en tu navegador. Nada sale de tu dispositivo sin tu permiso.', color: '#fff8e8', tags: ['bienvenida'], emoji: '👋' },
+    { title: '✅ Lista de tareas', content: '## Tareas pendientes\n\n- [x] Configurar la app\n- [ ] Escribir primera nota\n- [ ] Probar el markdown\n- [ ] Organizar por etiquetas\n\n> Hecho: ~~3~~ 1 de 4', color: '#fef0f5', tags: ['tareas'], emoji: '✅' },
+    { title: '📝 Markdown básico', content: '# Markdown\n\n**Negrita** · *Cursiva* · ~~Tachado~~\n\n## Lista\n- Item 1\n- Item 2\n\n## Código\n```\nconsole.log(\'Hola\')\n```\n\n| Col1 | Col2 |\n|------|------|\n| A | B |', color: '#f0faf0', tags: ['markdown', 'guía'], emoji: '📝' },
+    { title: '💡 Ideas', content: '## Ideas para explorar\n\n1. Aprender React Native\n2. Escribir un blog\n3. Contribuir a open source\n\n> Link: [github.com](https://github.com)', color: '#e8f4fd', tags: ['ideas'], emoji: '💡' },
+    { title: '📌 Recordatorio', content: '## Recordatorios\n\n- Cobrar facturas 📄\n- Comprar regalo 🎁\n- Llamar al médico 📞\n- **Fecha límite:** próxima semana', color: '#fff5e8', tags: ['recordatorio'], emoji: '📌' },
+  ]
+  for (let i = 0; i < samples.length; i++) {
+    const s = samples[i]
+    await addNote({ title: s.title, content: s.content, color: s.color, tags: s.tags, emoji: s.emoji })
+  }
 }

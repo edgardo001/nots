@@ -24,18 +24,22 @@ const NOTE_COLORS = [
 interface NoteEditorProps {
   noteId: string
   isMobile?: boolean
+  saveRef?: React.MutableRefObject<(() => Promise<void>) | null>
 }
 
-export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
+export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProps) {
   const notes = useNotesStore(s => s.notes)
+  const trashNotes = useNotesStore(s => s.trashNotes)
   const updateNote = useNotesStore(s => s.updateNote)
   const deleteNote = useNotesStore(s => s.deleteNote)
+  const permanentlyDeleteNote = useNotesStore(s => s.permanentlyDeleteNote)
   const setActiveNote = useNotesStore(s => s.setActiveNote)
   const saveVersion = useNotesStore(s => s.saveVersion)
   const getVersions = useNotesStore(s => s.getVersions)
   const restoreVersion = useNotesStore(s => s.restoreVersion)
   const forkFromVersion = useNotesStore(s => s.forkFromVersion)
-  const note = notes.find(n => n.id === noteId)
+  const deleteVersion = useNotesStore(s => s.deleteVersion)
+  const note = notes.find(n => n.id === noteId) || trashNotes.find(n => n.id === noteId)
 
   const [title, setTitle] = useState(note?.title ?? '')
   const [content, setContent] = useState(note?.content ?? '')
@@ -47,11 +51,13 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
   const [versions, setVersions] = useState<NoteVersion[]>([])
   const [versionsOpen, setVersionsOpen] = useState(false)
   const [versionsLoaded, setVersionsLoaded] = useState(false)
+  const [viewingVersionId, setViewingVersionId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const emojiRef = useRef<HTMLDivElement>(null)
   const colorRef = useRef<HTMLDivElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const savedVersionRef = useRef<string>('')
+
 
   useEffect(() => {
     if (note) {
@@ -102,6 +108,24 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
       savedVersionRef.current = content
     }
   }, [note, title, content, emoji, updateNote, saveVersion])
+
+  // Save on unmount (close/back)
+  const saveOnUnmount = useRef(save)
+  saveOnUnmount.current = save
+  useEffect(() => {
+    return () => { saveOnUnmount.current() }
+  }, [])
+
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = save
+    }
+    return () => {
+      if (saveRef) {
+        saveRef.current = null
+      }
+    }
+  }, [save, saveRef])
 
   const handleRestoreVersion = async (version: NoteVersion) => {
     if (content.length > 0) {
@@ -249,10 +273,9 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
                 </svg>
               )}
             </button>
-            <div style={{ flex: 1 }} />
-            <button
-              onClick={() => setDeleteConfirm(true)}
-              aria-label="Eliminar nota"
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            aria-label="Eliminar nota"
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -272,21 +295,23 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
               </svg>
             </button>
             <button
-              onClick={() => setActiveNote(null)}
-              aria-label="Cerrar editor"
+              onClick={async () => { await save(); setActiveNote(null) }}
+              aria-label="Guardar y cerrar"
+              title="Guardar y cerrar"
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
-                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                background: '#27ae60', cursor: 'pointer',
                 lineHeight: 1, flexShrink: 0,
-                color: 'var(--text-secondary)', display: 'flex',
+                color: '#fff', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.15s',
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
               </svg>
             </button>
           </div>
@@ -420,44 +445,46 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
                 <circle cx="12" cy="12" r="3"/>
               </svg>
             )}
-          </button>
+            </button>
+            <button
+              onClick={() => setDeleteConfirm(true)}
+              aria-label="Eliminar nota"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                lineHeight: 1, flexShrink: 0,
+                color: '#c0392b', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+              title="Eliminar nota"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
+            </button>
           <button
-            onClick={() => setDeleteConfirm(true)}
-            aria-label="Eliminar nota"
+            onClick={async () => { await save(); setActiveNote(null) }}
+            aria-label="Guardar y cerrar"
+            title="Guardar y cerrar"
             style={{
               width: 36, height: 36, borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
-              background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+              background: '#27ae60', cursor: 'pointer',
               lineHeight: 1, flexShrink: 0,
-              color: '#c0392b', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.15s',
-            }}
-            title="Eliminar nota"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-              <line x1="10" y1="11" x2="10" y2="17"/>
-              <line x1="14" y1="11" x2="14" y2="17"/>
-            </svg>
-          </button>
-          <button
-            onClick={() => setActiveNote(null)}
-            aria-label="Cerrar editor"
-            style={{
-              width: 36, height: 36, borderRadius: 6,
-              border: '1px solid rgba(0,0,0,0.10)',
-              background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-              lineHeight: 1, flexShrink: 0,
-              color: 'var(--text-secondary)', display: 'flex',
+              color: '#fff', display: 'flex',
               alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.15s',
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
             </svg>
           </button>
         </div>
@@ -526,12 +553,15 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             value={tagInput}
             onChange={e => setTagInput(e.target.value)}
             onKeyDown={e => {
-              if (e.key === 'Enter' && tagInput.trim()) {
+              if ((e.key === 'Enter' || e.key === 'Done' || e.key === 'Go') && tagInput.trim()) {
+                e.preventDefault()
                 const newTags = [...note.tags, tagInput.trim().toLowerCase()]
                 updateNote(note.id, { tags: newTags })
                 setTagInput('')
               }
             }}
+            enterKeyHint="done"
+            inputMode="search"
             placeholder="+ etiqueta"
             aria-label="Agregar etiqueta"
             style={{
@@ -619,52 +649,130 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
               </div>
             ) : (
               versions.map(v => (
-                <div
-                  key={v.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '8px 14px', borderBottom: '1px solid var(--border)',
-                    fontSize: 12, cursor: 'pointer', transition: 'background 0.1s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600 }}>
-                      v{v.versionNumber} — {v.title || 'Sin título'}
+                <div key={v.id}>
+                  <div
+                    onClick={() => setViewingVersionId(viewingVersionId === v.id ? null : v.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '8px 14px', borderBottom: '1px solid var(--border)',
+                      fontSize: 12, cursor: 'pointer', transition: 'background 0.1s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600 }}>
+                        v{v.versionNumber} — {v.title || 'Sin título'}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+                        {new Date(v.savedAt).toLocaleString()}
+                        {v.lat != null && v.lng != null && (
+                          <span> · 📍{v.lat.toFixed(4)}, {v.lng.toFixed(4)}</span>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
-                      {new Date(v.savedAt).toLocaleString()}
-                      {v.lat != null && v.lng != null && (
-                        <span> · 📍{v.lat.toFixed(4)}, {v.lng.toFixed(4)}</span>
-                      )}
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleForkVersion(v) }}
+                        style={{
+                          padding: '4px 8px', borderRadius: 0,
+                          border: '1px solid var(--border)', background: 'transparent',
+                          color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+                          fontWeight: 600, transition: 'all 0.15s',
+                        }}
+                        title="Crear nota nueva desde esta versión"
+                      >
+                        Fork
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleRestoreVersion(v) }}
+                        style={{
+                          padding: '4px 10px', borderRadius: 0,
+                          border: '1px solid var(--accent)', background: 'transparent',
+                          color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
+                          fontWeight: 600, transition: 'all 0.15s',
+                        }}
+                      >
+                        Restaurar
+                      </button>
+                      <button
+                        onClick={e => {
+                          e.stopPropagation()
+                          if (window.confirm('¿Eliminar esta versión?')) {
+                            deleteVersion(v.id)
+                            setVersions(versions.filter(x => x.id !== v.id))
+                            if (viewingVersionId === v.id) setViewingVersionId(null)
+                          }
+                        }}
+                        style={{
+                          padding: '4px 6px', borderRadius: 0,
+                          border: '1px solid var(--border)', background: 'transparent',
+                          color: '#c0392b', cursor: 'pointer', fontSize: 11,
+                          fontWeight: 600, transition: 'all 0.15s', lineHeight: 1,
+                        }}
+                        title="Eliminar versión"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
-                    <button
-                      onClick={() => handleForkVersion(v)}
-                      style={{
-                        padding: '4px 8px', borderRadius: 0,
-                        border: '1px solid var(--border)', background: 'transparent',
-                        color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
-                        fontWeight: 600, transition: 'all 0.15s',
-                      }}
-                      title="Crear nota nueva desde esta versión"
-                    >
-                      Fork
-                    </button>
-                    <button
-                      onClick={() => handleRestoreVersion(v)}
-                      style={{
-                        padding: '4px 10px', borderRadius: 0,
-                        border: '1px solid var(--accent)', background: 'transparent',
-                        color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
-                        fontWeight: 600, transition: 'all 0.15s',
-                      }}
-                    >
-                      Restaurar
-                    </button>
-                  </div>
+                  {viewingVersionId === v.id && (
+                    <div style={{
+                      padding: '12px 14px', borderBottom: '1px solid var(--border)',
+                      background: 'var(--bg)', fontSize: 13,
+                    }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
+                        {v.title || 'Sin título'}
+                      </div>
+                      <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 10 }}>
+                        {new Date(v.savedAt).toLocaleString()}
+                        {v.lat != null && v.lng != null && (
+                          <span> · 📍{v.lat.toFixed(4)}, {v.lng.toFixed(4)}</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
+                        <Markdown remarkPlugins={[remarkGfm]}>{v.content || '*Sin contenido*'}</Markdown>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleForkVersion(v) }}
+                          style={{
+                            padding: '4px 10px', borderRadius: 0,
+                            border: '1px solid var(--border)', background: 'transparent',
+                            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Fork
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleRestoreVersion(v) }}
+                          style={{
+                            padding: '4px 10px', borderRadius: 0,
+                            border: '1px solid var(--accent)', background: 'transparent',
+                            color: 'var(--accent)', cursor: 'pointer', fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Restaurar
+                        </button>
+                        <button
+                          onClick={() => setViewingVersionId(null)}
+                          style={{
+                            padding: '4px 10px', borderRadius: 0,
+                            border: '1px solid var(--border)', background: 'transparent',
+                            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Cerrar vista
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -674,6 +782,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.5 }}>
+          {note.author && <span style={{ marginRight: 8 }}>Por {note.author} · </span>}
           Creado {new Date(note.createdAt).toLocaleString()} · Última edición {new Date(note.updatedAt).toLocaleString()}
           {note.createdLat != null && note.createdLng != null && (
             <span title={`Creado en: ${note.createdLat.toFixed(4)}, ${note.createdLng.toFixed(4)}`}>
@@ -774,7 +883,14 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             </p>
 
             <button
-              onClick={() => { deleteNote(note.id); setActiveNote(null); setDeleteConfirm(false) }}
+              onClick={() => {
+                if (note.deletedAt) {
+                  permanentlyDeleteNote(note.id)
+                } else {
+                  deleteNote(note.id)
+                }
+                setActiveNote(null); setDeleteConfirm(false)
+              }}
               style={{
                 width: '100%', padding: '10px', borderRadius: 8, border: 'none',
                 background: 'var(--accent)', cursor: 'pointer', fontSize: 14,

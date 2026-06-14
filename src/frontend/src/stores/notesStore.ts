@@ -10,8 +10,11 @@ import {
   restoreNote as dbRestoreNote,
   addVersion as dbAddVersion,
   getVersions as dbGetVersions,
+  deleteVersion as dbDeleteVersion,
+  deleteAllNotes as dbDeleteAllNotes,
 } from '../db/operations';
 import { getCurrentPosition } from '../utils/geolocation';
+import { getSetting, setSetting } from '../db/operations';
 
 function sortNotes(notes: Note[], field: SortField, order: SortOrder): Note[] {
   const sorted = [...notes].sort((a, b) => {
@@ -63,6 +66,9 @@ interface NotesState {
   getVersions: (noteId: string) => Promise<NoteVersion[]>;
   restoreVersion: (noteId: string, version: NoteVersion) => Promise<void>;
   forkFromVersion: (version: NoteVersion) => Promise<string>;
+  deleteVersion: (id: string) => Promise<void>;
+  deleteAllNotes: () => Promise<void>;
+  emptyTrash: () => Promise<void>;
 }
 
 export const useNotesStore = create<NotesState>((set, get) => ({
@@ -79,7 +85,9 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     set({ loading: true });
     const { sortField, sortOrder } = get();
     const notes = await getAllNotes();
-    set({ notes: sortNotes(notes, sortField, sortOrder), loading: false });
+    const viewSetting = await getSetting('app:viewMode');
+    const viewMode: ViewMode = viewSetting?.value === 'list' ? 'list' : 'postit';
+    set({ notes: sortNotes(notes, sortField, sortOrder), viewMode, loading: false });
   },
 
   loadTrash: async () => {
@@ -89,10 +97,12 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   addNote: async () => {
     const geo = await getCurrentPosition();
-    const note = await dbAddNote(geo ? {
-      createdLat: geo.lat, createdLng: geo.lng,
-      updatedLat: geo.lat, updatedLng: geo.lng,
-    } : undefined);
+    const authorSetting = await getSetting('app:author');
+    const author = authorSetting?.value as string | undefined;
+    const note = await dbAddNote({
+      ...(geo ? { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng } : {}),
+      ...(author ? { author } : {}),
+    });
     const { sortField, sortOrder } = get();
     const notes = sortNotes([...get().notes, note], sortField, sortOrder);
     set({ notes, activeNoteId: note.id });
@@ -101,8 +111,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   updateNote: async (id: string, data: Partial<Note>) => {
     const geo = await getCurrentPosition();
+    const authorSetting = await getSetting('app:author');
+    const author = authorSetting?.value as string | undefined;
     const updated = await dbUpdateNote(id, {
       ...data,
+      ...(author ? { author } : {}),
       ...(geo && { updatedLat: geo.lat, updatedLng: geo.lng }),
     });
     if (!updated) return;
@@ -140,7 +153,10 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  setViewMode: (mode) => set({ viewMode: mode }),
+  setViewMode: (mode) => {
+    set({ viewMode: mode });
+    setSetting('app:viewMode', mode);
+  },
 
   setSortField: (field) => {
     set({ sortField: field });
@@ -207,5 +223,22 @@ export const useNotesStore = create<NotesState>((set, get) => ({
     const notes = sortNotes([...get().notes, note], sortField, sortOrder);
     set({ notes, activeNoteId: note.id });
     return note.id;
+  },
+
+  deleteVersion: async (id: string) => {
+    await dbDeleteVersion(id);
+  },
+
+  deleteAllNotes: async () => {
+    await dbDeleteAllNotes();
+    set({ notes: [], trashNotes: [] });
+  },
+
+  emptyTrash: async () => {
+    const { trashNotes } = get();
+    for (const note of trashNotes) {
+      await dbPermanentDelete(note.id);
+    }
+    set({ trashNotes: [] });
   },
 }));

@@ -3,11 +3,13 @@ import { useEffect, useState, useRef } from 'react'
 import { useNotesStore } from './stores/notesStore'
 import { useUIStore } from './stores/uiStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
-import { deleteOldTrash } from './db/operations'
+import { useUrlSync } from './hooks/useUrlSync'
+import { deleteOldTrash, seedSampleNotes } from './db/operations'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import NoteGrid from './components/layout/NoteGrid'
 import NoteEditor from './components/note/NoteEditor'
+import SettingsModal from './components/settings/SettingsModal'
 
 const SYNC_CHANNEL = 'notas-app-sync'
 
@@ -15,23 +17,62 @@ export default function App() {
   const loadNotes = useNotesStore(s => s.loadNotes)
   const activeNoteId = useNotesStore(s => s.activeNoteId)
   const notes = useNotesStore(s => s.notes)
-  const activeNote = notes.find(n => n.id === activeNoteId)
+  const trashNotes = useNotesStore(s => s.trashNotes)
+  const activeNote = notes.find(n => n.id === activeNoteId) || trashNotes.find(n => n.id === activeNoteId)
   const setActiveNote = useNotesStore(s => s.setActiveNote)
   const resolvedTheme = useUIStore(s => s.resolvedTheme)
   const loadTheme = useUIStore(s => s.loadTheme)
   const sidebarOpen = useUIStore(s => s.sidebarOpen)
   const setSidebarOpen = useUIStore(s => s.setSidebarOpen)
   const toggleSidebar = useUIStore(s => s.toggleSidebar)
+  const showTrash = useUIStore(s => s.showTrash)
+  const showSettings = useUIStore(s => s.showSettings)
+  const setShowSettings = useUIStore(s => s.setShowSettings)
   const addNote = useNotesStore(s => s.addNote)
+  const deleteAllNotes = useNotesStore(s => s.deleteAllNotes)
+  const emptyTrash = useNotesStore(s => s.emptyTrash)
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const channelRef = useRef<BroadcastChannel | null>(null)
   const [storageWarning, setStorageWarning] = useState(false)
+  const [burning, setBurning] = useState(false)
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState<'first' | 'second' | null>(null)
+  const [showEmptyTrashConfirm, setShowEmptyTrashConfirm] = useState(false)
+  const seededRef = useRef(false)
+  const noteEditorSaveRef = useRef<(() => Promise<void>) | null>(null)
 
   useKeyboardShortcuts()
+  useUrlSync()
+
+  // Push history state when opening a note, handle Android back button
+  useEffect(() => {
+    if (activeNoteId) {
+      history.pushState({ noteOpen: true }, '')
+    }
+  }, [activeNoteId])
 
   useEffect(() => {
-    loadNotes()
+    const handlePopState = () => {
+      if (activeNoteId) {
+        noteEditorSaveRef.current?.()
+        setActiveNote(null)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [activeNoteId, setActiveNote])
+
+  useEffect(() => {
+    const init = async () => {
+      await loadNotes()
+      const { notes } = useNotesStore.getState()
+      if (notes.length === 0 && !seededRef.current) {
+        seededRef.current = true
+        await seedSampleNotes()
+        await loadNotes()
+      }
+    }
+    init()
     loadTheme()
     deleteOldTrash(7)
 
@@ -46,6 +87,9 @@ export default function App() {
     const channel = new BroadcastChannel(SYNC_CHANNEL)
     channelRef.current = channel
     channel.onmessage = () => {
+      if (!seededRef.current) {
+        seededRef.current = true
+      }
       loadNotes()
       useUIStore.getState().loadTheme()
     }
@@ -73,12 +117,50 @@ export default function App() {
   }, [resolvedTheme])
 
   useEffect(() => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('style', 'display:none')
+    svg.setAttribute('aria-hidden', 'true')
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+    filter.setAttribute('id', 'crumple')
+    const feTurbulence = document.createElementNS('http://www.w3.org/2000/svg', 'feTurbulence')
+    feTurbulence.setAttribute('type', 'fractalNoise')
+    feTurbulence.setAttribute('baseFrequency', '0.04')
+    feTurbulence.setAttribute('numOctaves', '4')
+    feTurbulence.setAttribute('result', 'noise')
+    const feDisplacement = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap')
+    feDisplacement.setAttribute('in', 'SourceGraphic')
+    feDisplacement.setAttribute('in2', 'noise')
+    feDisplacement.setAttribute('scale', '3')
+    feDisplacement.setAttribute('xChannelSelector', 'R')
+    feDisplacement.setAttribute('yChannelSelector', 'Y')
+    filter.appendChild(feTurbulence)
+    filter.appendChild(feDisplacement)
+    svg.appendChild(filter)
+    document.body.appendChild(svg)
+    return () => { svg.remove() }
+  }, [])
+
+  useEffect(() => {
     if (!isMobile) {
       setSidebarOpen(true)
     } else {
       setSidebarOpen(false)
     }
   }, [isMobile, setSidebarOpen])
+
+  const handleBorrarTodo = () => {
+    setShowDeleteAllConfirm('first')
+  }
+
+  const confirmDeleteAll = () => {
+    setShowDeleteAllConfirm(null)
+    setBurning(true)
+    setTimeout(async () => {
+      await deleteAllNotes()
+      setBurning(false)
+      await loadNotes()
+    }, 800)
+  }
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -100,8 +182,8 @@ export default function App() {
           </button>
         </div>
       )}
-      <Header isMobile={isMobile} />
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+      <Header isMobile={isMobile} onBorrarTodo={handleBorrarTodo} />
+      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
         
         {/* Contenedor flotante del Sidebar con transición en sincronía con la pestaña */}
         <div style={{
@@ -115,7 +197,7 @@ export default function App() {
           transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           display: 'flex',
           flexDirection: 'column',
-          
+          overflow: 'visible',
         }}>
           <Sidebar />
         </div>
@@ -177,7 +259,7 @@ export default function App() {
         {/* Contenedor principal con padding dinámico para evitar solapamiento de notas */}
         <main style={{
           flex: 1,
-          overflow: 'auto',
+          overflow: 'hidden',
           background: 'var(--bg)',
           paddingTop: 32,
           paddingBottom: 32,
@@ -185,9 +267,66 @@ export default function App() {
           paddingLeft: sidebarOpen ? 312 : 32,
           transition: 'padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         }}>
-          <NoteGrid />
+          <NoteGrid burning={burning} />
         </main>
       </div>
+
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
+      )}
+
+      {showDeleteAllConfirm && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setShowDeleteAllConfirm(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 8, overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.18)', width: '90%', maxWidth: 440,
+            }}
+          >
+            <div style={{ padding: '24px 28px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                {showDeleteAllConfirm === 'first' ? '🔥 Borrar Todo' : '⚠️ Confirmación final'}
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                {showDeleteAllConfirm === 'first'
+                  ? '¿Estás seguro de que quieres borrar todas las notas? Esta acción no se puede deshacer.'
+                  : 'Esto eliminará permanentemente TODAS las notas, versiones y configuraciones. ¿Estás absolutamente seguro?'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', padding: '20px 28px 24px' }}>
+              <button
+                onClick={() => setShowDeleteAllConfirm(null)}
+                style={{
+                  padding: '10px 20px', borderRadius: 6, border: '1px solid var(--border)',
+                  background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+                }}
+              >
+                Cancelar
+              </button>
+               <button
+                onClick={() => {
+                  if (showDeleteAllConfirm === 'first') setShowDeleteAllConfirm('second')
+                  else confirmDeleteAll()
+                }}
+                style={{
+                  padding: '10px 20px', borderRadius: 6, border: 'none',
+                  background: 'var(--accent)',
+                  color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}
+              >
+                {showDeleteAllConfirm === 'first' ? 'Sí, borrar todo' : 'Eliminar permanentemente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeNoteId && (
         <div
@@ -201,7 +340,7 @@ export default function App() {
             animation: 'fadeIn 0.15s ease',
             padding: isMobile ? 0 : undefined,
           }}
-          onClick={() => setActiveNote(null)}
+          onClick={() => { noteEditorSaveRef.current?.(); setActiveNote(null) }}
         >
           <div
             style={{
@@ -224,11 +363,87 @@ export default function App() {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <NoteEditor noteId={activeNoteId} isMobile={isMobile} />
+            <NoteEditor noteId={activeNoteId} isMobile={isMobile} saveRef={noteEditorSaveRef} />
           </div>
         </div>
       )}
 
+      {showTrash && trashNotes.length > 0 && (
+        <button
+          onClick={() => setShowEmptyTrashConfirm(true)}
+          aria-label="Vaciar papelera"
+          title="Vaciar papelera"
+          style={{
+            position: 'fixed', bottom: 84, right: 20,
+            width: 56, height: 56, borderRadius: '50%',
+            background: 'var(--surface)', color: '#c0392b',
+            border: '1px solid var(--border)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+            fontSize: 20, zIndex: 100,
+            transition: 'transform 0.15s, box-shadow 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)' }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+        </button>
+      )}
+      {showEmptyTrashConfirm && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setShowEmptyTrashConfirm(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 8, overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.18)', width: '90%', maxWidth: 400,
+            }}
+          >
+            <div style={{ padding: '24px 28px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                Vaciar papelera
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                ¿Estás seguro de vaciar la papelera? Se eliminarán permanentemente {trashNotes.length} nota{trashNotes.length !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', padding: '20px 28px 24px' }}>
+              <button
+                onClick={() => setShowEmptyTrashConfirm(false)}
+                style={{
+                  padding: '10px 20px', borderRadius: 6, border: '1px solid var(--border)',
+                  background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  await emptyTrash()
+                  setShowEmptyTrashConfirm(false)
+                }}
+                style={{
+                  padding: '10px 20px', borderRadius: 6, border: 'none',
+                  background: 'var(--accent)',
+                  color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                }}
+              >
+                Vaciar papelera
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <button
         onClick={addNote}
         aria-label="Crear nueva nota"
