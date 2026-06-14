@@ -108,7 +108,7 @@ export default function Sidebar() {
       {/* Ordenar + Filtrar en una fila compacta */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        padding: '0 12px 10px',
+        padding: '12px 12px 10px',
       }}>
         {/* Orden */}
         <select
