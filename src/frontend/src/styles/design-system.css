@@ -79,6 +79,21 @@ input, textarea, select, button {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@media (max-width: 768px) {
+  [data-search-input] {
+    font-size: 16px !important;
+    padding: 10px 12px 10px 36px !important;
+  }
+  div[role="dialog"] button[style*="width: 36"] {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  aside button[style*="borderRadius: 12"] {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+}
+
 @media (max-width: 600px) {
   header[role="banner"] {
     padding: 0 12px !important;
@@ -103,7 +118,7 @@ input, textarea, select, button {
   aside[style*="width: 280"] {
     width: 100% !important;
     min-width: auto !important;
-    height: auto;
+    height: 100% !important;
   }
   main {
     padding: 12px !important;
