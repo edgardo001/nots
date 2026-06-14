@@ -111,9 +111,9 @@ export default function Sidebar() {
           onClick={addNote}
           aria-label="Crear nueva nota"
           style={{
-            width: '100%', padding: '9px 0', border: 'none',
+            width: '100%', padding: '11px 0', border: 'none',
             borderRadius: 8, background: 'var(--accent)', color: '#fff',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
             letterSpacing: '0.02em', transition: 'opacity 0.15s',
           }}
         >
@@ -132,9 +132,9 @@ export default function Sidebar() {
           onChange={e => setSortField(e.target.value as SortField)}
           aria-label="Ordenar notas por"
           style={{
-            flex: 1, padding: '5px 6px', borderRadius: 6,
+            flex: 1, padding: '7px 8px', borderRadius: 6,
             border: '1px solid var(--border)', background: 'var(--bg)',
-            color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer',
+            color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer',
             appearance: 'none', backgroundImage: 'none',
           }}
         >
@@ -149,9 +149,9 @@ export default function Sidebar() {
           aria-label={sortOrder === 'asc' ? 'Orden descendente' : 'Orden ascendente'}
           title={sortOrder === 'asc' ? 'Más antiguo primero' : 'Más reciente primero'}
           style={{
-            padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border)',
+            padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)',
             background: 'var(--bg)', color: 'var(--text-secondary)',
-            cursor: 'pointer', fontSize: 12, lineHeight: 1, flexShrink: 0,
+            cursor: 'pointer', fontSize: 13, lineHeight: 1, flexShrink: 0,
           }}
         >
           {sortOrder === 'asc' ? '↑' : '↓'}
@@ -164,11 +164,11 @@ export default function Sidebar() {
           aria-label="Mostrar filtros"
           title="Filtros"
           style={{
-            padding: '5px 8px', borderRadius: 6, flexShrink: 0,
+            padding: '7px 10px', borderRadius: 6, flexShrink: 0,
             border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
             background: activeFilterCount > 0 ? 'var(--accent-light)' : 'var(--bg)',
             color: activeFilterCount > 0 ? 'var(--accent)' : 'var(--text-secondary)',
-            cursor: 'pointer', fontSize: 12, lineHeight: 1,
+            cursor: 'pointer', fontSize: 13, lineHeight: 1,
             display: 'flex', alignItems: 'center', gap: 4,
             transition: 'all 0.15s',
           }}
@@ -316,11 +316,11 @@ export default function Sidebar() {
               onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
               aria-pressed={tagFilter === tag}
               style={{
-                padding: '3px 8px', borderRadius: 12,
+                padding: '5px 10px', borderRadius: 12,
                 border: `1px solid ${tagFilter === tag ? 'var(--accent)' : 'var(--border)'}`,
                 background: tagFilter === tag ? 'var(--accent)' : 'transparent',
                 color: tagFilter === tag ? '#fff' : 'var(--text-secondary)',
-                cursor: 'pointer', fontSize: 11, transition: 'all 0.15s',
+                cursor: 'pointer', fontSize: 12, transition: 'all 0.15s',
               }}
             >
               #{tag}
@@ -342,9 +342,9 @@ export default function Sidebar() {
             onChange={e => setGroupBy(e.target.value as 'none' | 'folder' | 'tag')}
             aria-label="Agrupar notas por"
             style={{
-              flex: 1, padding: '4px 6px', borderRadius: 6,
+              flex: 1, padding: '6px 8px', borderRadius: 6,
               border: '1px solid var(--border)', background: 'var(--bg)',
-              color: 'var(--text-secondary)', fontSize: 10, cursor: 'pointer',
+              color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer',
             }}
           >
             <option value="none">Sin agrupar</option>
@@ -426,7 +426,7 @@ export default function Sidebar() {
       </div>
 
       {/* Papelera */}
-      <div style={{ marginTop: 'auto', background: 'var(--surface)' }}>
+      <div style={{ flexShrink: 0, background: 'var(--surface)' }}>
         <button
           onClick={() => {
             const next = !showTrash
@@ -437,9 +437,9 @@ export default function Sidebar() {
           aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
           aria-expanded={showTrash}
           style={{
-            margin: 8, padding: '7px 12px', borderRadius: 8,
+            margin: 8, padding: '10px 12px', borderRadius: 8,
             border: '1px solid var(--border)', background: 'transparent',
-            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
             textAlign: 'left', transition: 'all 0.15s',
             display: 'flex', alignItems: 'center', gap: 6,
             width: 'calc(100% - 16px)',
