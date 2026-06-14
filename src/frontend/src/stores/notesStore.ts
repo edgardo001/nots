@@ -96,20 +96,34 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   addNote: async () => {
-    const [authorSetting] = await Promise.all([getSetting('app:author')]);
-    const author = authorSetting?.value as string | undefined;
-    const note = await dbAddNote({
-      ...(author ? { author } : {}),
-    });
-    const { sortField, sortOrder } = get();
-    const notes = sortNotes([...get().notes, note], sortField, sortOrder);
-    set({ notes, activeNoteId: note.id });
-    getCurrentPosition().then(geo => {
-      if (geo) {
-        get().updateNote(note.id, { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng });
-      }
-    });
-    return note.id;
+    try {
+      const [authorSetting] = await Promise.all([getSetting('app:author')]);
+      const author = authorSetting?.value as string | undefined;
+      const note = await dbAddNote({
+        ...(author ? { author } : {}),
+      });
+      const { sortField, sortOrder } = get();
+      const notes = sortNotes([...get().notes, note], sortField, sortOrder);
+      set({ notes, activeNoteId: note.id });
+      getCurrentPosition().then(geo => {
+        if (geo) {
+          get().updateNote(note.id, { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng });
+        }
+      });
+      return note.id;
+    } catch (err) {
+      console.error('addNote failed, reloading notes...', err);
+      await get().loadNotes();
+      const [authorSetting] = await Promise.all([getSetting('app:author')]);
+      const author = authorSetting?.value as string | undefined;
+      const note = await dbAddNote({
+        ...(author ? { author } : {}),
+      });
+      const { sortField, sortOrder } = get();
+      const notes = sortNotes([...get().notes, note], sortField, sortOrder);
+      set({ notes, activeNoteId: note.id });
+      return note.id;
+    }
   },
 
   updateNote: async (id: string, data: Partial<Note>) => {
@@ -237,7 +251,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
 
   deleteAllNotes: async () => {
     await dbDeleteAllNotes();
-    set({ notes: [], trashNotes: [] });
+    set({ notes: [], trashNotes: [], activeNoteId: null });
   },
 
   emptyTrash: async () => {

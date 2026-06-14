@@ -87,7 +87,7 @@ export default function NoteGrid({ burning }: NoteGridProps) {
         </div>
         {!showTrash && (
           <button
-            onClick={addNote}
+            onClick={() => { addNote().catch((err: unknown) => console.error('Error al crear nota:', err)) }}
             style={{
               padding: '10px 24px', borderRadius: 0,
               background: 'var(--accent)', color: '#fff',

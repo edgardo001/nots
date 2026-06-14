@@ -488,7 +488,15 @@ export default function App() {
         </div>
       )}
       <button
-        onClick={addNote}
+        onClick={async () => {
+          try {
+            await addNote()
+          } catch (err) {
+            console.error('Error al crear nota:', err)
+            setUrlError('Error al crear nota. Recarga la página e intenta de nuevo.')
+            setTimeout(() => setUrlError(null), 5000)
+          }
+        }}
         aria-label="Crear nueva nota"
         style={{
           position: 'fixed', bottom: 20, right: 20,

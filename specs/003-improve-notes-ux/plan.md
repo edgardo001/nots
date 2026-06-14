@@ -104,12 +104,17 @@ El i18n requiere envolver todas las cadenas visibles con `t()`. Estrategia:
 Sin violaciones — extensiones incrementales sobre estructura existente.
 Mayor complejidad: i18n (envolver ~80 cadenas), animación fuego con partículas CSS.
 
-### Bugfixes (Phase 17, sesión actual)
+### Bugfixes (Phase 17-18, sesión actual)
 - `deleteAllNotes()` ya no toca settings — evita pérdida de tema/viewMode/autor post-borrado
 - URL inválida valida UUID contra `notes`/`trashNotes` tras carga — toast rojo "Nota no encontrada"
 - `getCurrentPosition()` fire-and-forget en `addNote`/`updateNote` — elimina bloqueo de 5s que impedía crear notas post-Borrar Todo
+- `addNote` con try/catch + retry — si IndexedDB falla, recarga notas y reintenta
+- FAB button con try/catch + toast error — feedback visible al usuario en lugar de silencio
 
 ## Critical Context (updated)
 - `deleteAllNotes()` en `db/operations.ts` ya no hace `db.clear('settings')`
+- `deleteAllNotes` en store también resetea `activeNoteId: null`
 - `useUrlSync.ts` ya no setea `activeNoteId` inmediatamente en mount — se difiere hasta que `loading` es false
 - `addNote` y `updateNote` en `notesStore.ts` usan `getCurrentPosition().then(...)` fire-and-forget
+- `addNote` envuelto en try/catch con recarga + retry automático
+- FAB "+" en App.tsx con try/catch local y toast de error
