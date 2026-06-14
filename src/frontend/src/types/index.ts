@@ -14,6 +14,7 @@ export interface Note {
   createdLng?: number;
   updatedLat?: number;
   updatedLng?: number;
+  author?: string | null;
 }
 
 export interface NoteVersion {
