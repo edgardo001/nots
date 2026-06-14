@@ -163,6 +163,17 @@ export default function App() {
           </svg>
         </button>
 
+        {/* Overlay para cerrar sidebar al tocar fuera en móvil */}
+        {isMobile && sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 97,
+              background: 'transparent',
+            }}
+          />
+        )}
+
         {/* Contenedor principal con padding dinámico para evitar solapamiento de notas */}
         <main style={{
           flex: 1,
@@ -201,7 +212,9 @@ export default function App() {
               width: '100%',
               maxHeight: isMobile ? '100%' : '85vh',
               height: isMobile ? '100%' : undefined,
-              overflowY: 'auto',
+              display: isMobile ? 'flex' : undefined,
+              flexDirection: isMobile ? 'column' : undefined,
+              overflow: 'hidden',
               boxShadow: isMobile ? 'none' : (activeNote?.color
                 ? '0 24px 64px rgba(0,0,0,0.18), 0 2px 0 rgba(0,0,0,0.08) inset'
                 : '0 20px 60px rgba(0,0,0,0.15)'),
