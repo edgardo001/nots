@@ -34,17 +34,17 @@ function SortableItem({ note, activeNoteId, onSelectNote }: {
       onClick={() => onSelectNote(note.id)}
       style={{
         ...style,
-        display: 'flex', alignItems: 'center', gap: 6,
-        width: '100%', padding: '4px 8px', marginBottom: 1,
-        borderRadius: 0, border: 'none',
+        display: 'flex', alignItems: 'center', gap: 8,
+        width: '100%', padding: '7px 10px', marginBottom: 1,
+        borderRadius: 6, border: 'none',
         background: note.id === activeNoteId ? 'var(--accent-light)' : 'transparent',
         color: note.id === activeNoteId ? 'var(--accent)' : 'var(--text)',
         cursor: viewMode === 'list' ? 'grab' : 'pointer', textAlign: 'left',
         transition: `${transition || ''}, background 0.1s`,
-        fontSize: 12,
+        fontSize: 13,
       }}
     >
-      <span style={{ fontSize: 14, flexShrink: 0 }}>{note.emoji}</span>
+      <span style={{ fontSize: 18, flexShrink: 0 }}>{note.emoji}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis',

@@ -68,20 +68,20 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
           color: cardStyle.text, transition: 'all 0.15s',
         }}
       >
-        <span style={{ fontSize: 20, flexShrink: 0 }}>{note.emoji}</span>
+        <span style={{ fontSize: 22, flexShrink: 0 }}>{note.emoji}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 14 }}>{note.title || 'Sin título'}</div>
           <div style={{ fontSize: 12, opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {note.content ? note.content.slice(0, 60) : '...'}
+            {note.content ? note.content.slice(0, 80) : '...'}
           </div>
         </div>
-        <span style={{ fontSize: 11, opacity: 0.4, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 11, opacity: 0.4, whiteSpace: 'nowrap', flexShrink: 0 }}>
           {note.updatedLat != null && note.updatedLng != null && '📍 '}
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
         <button onClick={e => { e.stopPropagation(); onDelete() }} aria-label="Eliminar nota" style={{
           background: 'none', border: 'none', cursor: 'pointer',
-          fontSize: 16, opacity: 0.3, padding: 2, lineHeight: 1, color: cardStyle.text,
+          fontSize: 18, opacity: 0.3, padding: '4px 6px', lineHeight: 1, color: cardStyle.text,
         }}>×</button>
       </div>
     )
@@ -118,7 +118,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontSize: 26, lineHeight: 1 }}>{note.emoji}</span>
+        <span style={{ fontSize: 28, lineHeight: 1 }}>{note.emoji}</span>
         <div style={{ display: 'flex', gap: 4 }}>
           {onRestore && (
             <button
@@ -126,7 +126,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
               aria-label="Restaurar nota"
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 13, opacity: 0, padding: 2, lineHeight: 1,
+                fontSize: 16, opacity: 0, padding: '4px 6px', lineHeight: 1,
                 color: cardStyle.text, transition: 'opacity 0.15s',
               }}
               className="card-del"
@@ -139,7 +139,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
             aria-label="Eliminar nota"
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              fontSize: 14, opacity: 0, padding: 2, lineHeight: 1,
+              fontSize: 18, opacity: 0, padding: '4px 6px', lineHeight: 1,
               color: cardStyle.text, transition: 'opacity 0.15s',
             }}
             className="card-del"
