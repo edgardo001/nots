@@ -96,27 +96,28 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   addNote: async () => {
-    const geo = await getCurrentPosition();
-    const authorSetting = await getSetting('app:author');
+    const [authorSetting] = await Promise.all([getSetting('app:author')]);
     const author = authorSetting?.value as string | undefined;
     const note = await dbAddNote({
-      ...(geo ? { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng } : {}),
       ...(author ? { author } : {}),
     });
     const { sortField, sortOrder } = get();
     const notes = sortNotes([...get().notes, note], sortField, sortOrder);
     set({ notes, activeNoteId: note.id });
+    getCurrentPosition().then(geo => {
+      if (geo) {
+        get().updateNote(note.id, { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng });
+      }
+    });
     return note.id;
   },
 
   updateNote: async (id: string, data: Partial<Note>) => {
-    const geo = await getCurrentPosition();
-    const authorSetting = await getSetting('app:author');
+    const [authorSetting] = await Promise.all([getSetting('app:author')]);
     const author = authorSetting?.value as string | undefined;
     const updated = await dbUpdateNote(id, {
       ...data,
       ...(author ? { author } : {}),
-      ...(geo && { updatedLat: geo.lat, updatedLng: geo.lng }),
     });
     if (!updated) return;
     const { sortField, sortOrder } = get();
@@ -126,6 +127,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       sortOrder
     );
     set({ notes });
+    getCurrentPosition().then(geo => {
+      if (geo) {
+        dbUpdateNote(id, { updatedLat: geo.lat, updatedLng: geo.lng });
+      }
+    });
   },
 
   deleteNote: async (id: string) => {
