@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { CSS } from '@dnd-kit/utilities'
 import { useSortable } from '@dnd-kit/sortable'
 import type { Note } from '../../types'
@@ -6,6 +6,7 @@ import { useNotesStore } from '../../stores/notesStore'
 
 interface NoteCardProps {
   note: Note
+  burning?: boolean
   onClick: () => void
   onDelete: () => void
   onRestore?: () => void
@@ -33,9 +34,26 @@ function getCardStyle(color?: string) {
   return NOTE_COLORS[DEFAULT_COLOR]
 }
 
-export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCardProps) {
+export default function NoteCard({ note, onClick, onDelete, onRestore, burning }: NoteCardProps) {
+  const [crumpling, setCrumpling] = useState(false)
   const viewMode = useNotesStore(s => s.viewMode)
   const cardStyle = getCardStyle(note.color)
+  const isTrashed = note.deletedAt !== null
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (crumpling) return
+    setCrumpling(true)
+    setTimeout(() => { onDelete() }, 500)
+  }
+
+  const crumpleStyle: CSSProperties = {}
+  if (crumpling) {
+    crumpleStyle.animation = 'crumpleOut 0.5s ease forwards'
+  } else if (isTrashed) {
+    crumpleStyle.filter = 'url(#crumple) grayscale(0.3)'
+    crumpleStyle.opacity = 0.85
+  }
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
@@ -47,6 +65,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
     transition,
     opacity: isDragging ? 0.4 : 1,
     zIndex: isDragging ? 10 : 'auto',
+    ...crumpleStyle,
   }
 
   if (viewMode === 'list') {
@@ -62,12 +81,29 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         aria-label={`Nota: ${note.title || 'Sin título'}`}
         style={{
           ...style,
+          position: 'relative',
           display: 'flex', alignItems: 'center', gap: 12,
           padding: '10px 14px', borderRadius: 0, cursor: 'grab',
           background: cardStyle.bg, border: `1px solid ${cardStyle.border}`,
           color: cardStyle.text, transition: 'all 0.15s',
+          animation: burning ? 'burnOut 0.8s ease forwards' : undefined,
+          overflow: burning ? 'hidden' : undefined,
         }}
       >
+        {burning && (
+          <>
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 5,
+              background: 'linear-gradient(180deg, rgba(255,107,53,0.3) 0%, rgba(255,50,0,0.15) 50%, transparent 100%)',
+              pointerEvents: 'none',
+            }} />
+            <span style={{
+              position: 'absolute', bottom: 4, left: '30%', zIndex: 6,
+              fontSize: 16, pointerEvents: 'none',
+              animation: 'fireRise 0.6s ease 0s forwards',
+            }}>🔥</span>
+          </>
+        )}
         <span style={{ fontSize: 22, flexShrink: 0 }}>{note.emoji}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, fontSize: 14 }}>{note.title || 'Sin título'}</div>
@@ -77,9 +113,10 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         </div>
         <span style={{ fontSize: 11, opacity: 0.4, whiteSpace: 'nowrap', flexShrink: 0 }}>
           {note.updatedLat != null && note.updatedLng != null && '📍 '}
+          {note.author && <span style={{ marginRight: 4 }}>{note.author} · </span>}
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
-        <button onClick={e => { e.stopPropagation(); onDelete() }} aria-label="Eliminar nota" style={{
+        <button onClick={handleDelete} aria-label="Eliminar nota" style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 18, opacity: 0.3, padding: '4px 6px', lineHeight: 1, color: cardStyle.text,
         }}>×</button>
@@ -95,6 +132,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
       onClick={onClick}
       style={{
         ...style,
+        position: 'relative',
         width: '100%', minHeight: 190, borderRadius: 0,
         background: cardStyle.bg, border: `1px solid ${cardStyle.border}`,
         padding: '18px 16px 14px', cursor: 'grab', color: cardStyle.text,
@@ -103,6 +141,8 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
           ? '0 12px 40px rgba(0,0,0,0.15)'
           : '0 1px 3px rgba(0,0,0,0.04)',
         transition: `${transition || ''}, box-shadow 0.2s ease, transform 0.2s ease`,
+        animation: burning ? 'burnOut 0.8s ease forwards' : undefined,
+        overflow: burning ? 'hidden' : undefined,
       }}
       onMouseEnter={e => {
         if (!isDragging) {
@@ -117,6 +157,24 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
         }
       }}
     >
+      {burning && (
+        <>
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 5,
+            background: 'linear-gradient(180deg, rgba(255,107,53,0.3) 0%, rgba(255,50,0,0.15) 50%, transparent 100%)',
+            pointerEvents: 'none',
+          }} />
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              position: 'absolute', bottom: 10, zIndex: 6,
+              left: `${20 + i * 30}%`,
+              fontSize: 20 + i * 4,
+              pointerEvents: 'none',
+              animation: `fireRise ${0.6 + i * 0.1}s ease ${i * 0.12}s forwards`,
+            }}>🔥</span>
+          ))}
+        </>
+      )}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
         <span style={{ fontSize: 28, lineHeight: 1 }}>{note.emoji}</span>
         <div style={{ display: 'flex', gap: 4 }}>
@@ -135,7 +193,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
             >↩</button>
           )}
           <button
-            onClick={e => { e.stopPropagation(); onDelete() }}
+            onClick={handleDelete}
             aria-label="Eliminar nota"
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
@@ -180,6 +238,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
             📍
           </span>
         )}
+        {note.author && <span style={{ marginRight: 4 }}>{note.author} · </span>}
         {new Date(note.updatedAt).toLocaleDateString()}
       </div>
     </div>

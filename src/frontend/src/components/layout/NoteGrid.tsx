@@ -1,6 +1,6 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import {
-  DndContext, DragEndEvent, closestCenter,
+  DndContext, DragEndEvent, DragStartEvent, DragOverlay, closestCenter,
   PointerSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import {
@@ -10,7 +10,11 @@ import { useNotesStore } from '../../stores/notesStore'
 import { useUIStore } from '../../stores/uiStore'
 import NoteCard from '../note/NoteCard'
 
-export default function NoteGrid() {
+interface NoteGridProps {
+  burning?: boolean
+}
+
+export default function NoteGrid({ burning }: NoteGridProps) {
   const notes = useNotesStore(s => s.notes)
   const trashNotes = useNotesStore(s => s.trashNotes)
   const searchQuery = useNotesStore(s => s.searchQuery)
@@ -30,6 +34,8 @@ export default function NoteGrid() {
     useSensor(KeyboardSensor),
   )
 
+  const [activeId, setActiveId] = useState<string | null>(null)
+
   const source = showTrash ? trashNotes : notes
   let filtered = source
   if (searchQuery) {
@@ -47,8 +53,13 @@ export default function NoteGrid() {
     return sortOrder === 'desc' ? b.updatedAt.localeCompare(a.updatedAt) : a.updatedAt.localeCompare(b.updatedAt)
   })
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
     if (!over || active.id === over.id) return
 
     const ids = sorted.map(n => n.id)
@@ -57,6 +68,10 @@ export default function NoteGrid() {
     const reordered = arrayMove(ids, oldIndex, newIndex)
 
     reordered.forEach((id, idx) => moveNote(id, idx))
+  }
+
+  const handleDragCancel = () => {
+    setActiveId(null)
   }
 
   if (sorted.length === 0) {
@@ -88,11 +103,13 @@ export default function NoteGrid() {
   }
 
   const enableDnd = !showTrash && viewMode === 'postit'
+  const activeNote = activeId ? sorted.find(n => n.id === activeId) : null
 
   const cards = sorted.map(note => (
     <NoteCard
       key={note.id}
       note={note}
+      burning={burning}
       onClick={() => setActiveNote(note.id)}
       onDelete={() => showTrash ? permanentlyDeleteNote(note.id) : deleteNote(note.id)}
       onRestore={showTrash ? () => restoreNote(note.id) : undefined}
@@ -111,10 +128,40 @@ export default function NoteGrid() {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel}>
       <SortableContext items={sorted.map(n => n.id)} strategy={rectSortingStrategy}>
         <div style={gridStyle}>{cards}</div>
       </SortableContext>
+      <DragOverlay>
+        {activeNote ? (
+          <div style={{
+            width: 200, height: 190, borderRadius: 0,
+            background: activeNote.color || '#fff8e8',
+            border: '1px solid rgba(0,0,0,0.12)',
+            padding: '18px 16px 14px',
+            color: '#1a1a1a',
+            display: 'flex', flexDirection: 'column',
+            position: 'fixed',
+            pointerEvents: 'none',
+            zIndex: 999,
+            opacity: 0.9,
+            transform: 'rotate(2deg)',
+            boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+          }}>
+            <div style={{ fontSize: 28, lineHeight: 1, marginBottom: 10 }}>{activeNote.emoji}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, lineHeight: 1.3 }}>
+              {activeNote.title || 'Sin título'}
+            </div>
+            <div style={{
+              fontSize: 12, opacity: 0.65, lineHeight: 1.5, flex: 1,
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 3, WebkitBoxOrient: 'vertical',
+            }}>
+              {activeNote.content || '...'}
+            </div>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
