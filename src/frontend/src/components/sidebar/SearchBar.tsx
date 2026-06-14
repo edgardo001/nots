@@ -7,13 +7,14 @@ export default function SearchBar() {
 
   return (
     <div style={{ position: 'relative', width: '100%' }} role="search" aria-label="Buscar notas">
-      <span style={{
+      <svg style={{
         position: 'absolute', left: 12, top: '50%',
-        transform: 'translateY(-50%)', fontSize: 13, opacity: 0.3,
+        transform: 'translateY(-50%)', opacity: 0.3,
         pointerEvents: 'none',
-      }}>
-        🔍
-      </span>
+      }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
       <input
         type="search"
         data-search-input
