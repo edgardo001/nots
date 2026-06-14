@@ -149,175 +149,331 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
   const allTags = [...new Set(notes.filter(n => !n.deletedAt).flatMap(n => n.tags))]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
-      <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
-          <button
-            onClick={() => setEmojiOpen(!emojiOpen)}
-            aria-label="Seleccionar emoji"
-            aria-expanded={emojiOpen}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', flex: isMobile ? 1 : undefined, minHeight: isMobile ? 0 : undefined }}>
+      {isMobile ? (
+        <>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
+              <button
+                onClick={() => setEmojiOpen(!emojiOpen)}
+                aria-label="Seleccionar emoji"
+                aria-expanded={emojiOpen}
+                style={{
+                  width: 36, height: 36, borderRadius: 6,
+                  border: '1px solid rgba(0,0,0,0.10)',
+                  background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                  fontSize: 20, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', transition: 'all 0.15s',
+                  lineHeight: 1,
+                }}
+              >
+                {emoji}
+              </button>
+              {emojiOpen && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, marginTop: 6,
+                  zIndex: 20, background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                  padding: 10, width: isMobile ? 216 : 270, display: 'grid',
+                  gridTemplateColumns: `repeat(${isMobile ? 8 : 9}, 1fr)`, gap: 2,
+                  animation: 'fadeIn 0.1s ease',
+                }}>
+                  {EMOJIS.map(e => (
+                    <button
+                      key={e}
+                      onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
+                      style={{
+                        width: 26, height: 26, borderRadius: 0, border: 'none',
+                        background: e === emoji ? 'var(--accent-light)' : 'transparent',
+                        cursor: 'pointer', fontSize: 16, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.1s',
+                      }}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              onChange={e => { if (e.target.files?.[0]) handleImageInsert(e.target.files[0]); e.target.value = '' }}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => imageInputRef.current?.click()}
+              aria-label="Insertar imagen"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', transition: 'all 0.15s',
+                flexShrink: 0, lineHeight: 1,
+              }}
+              title="Insertar imagen"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setPreview(!preview)}
+              aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
+                background: preview ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
+                cursor: 'pointer', lineHeight: 1, flexShrink: 0,
+                color: preview ? 'var(--text)' : 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+              title={preview ? 'Editar' : 'Vista previa'}
+            >
+              {preview ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              )}
+            </button>
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={() => setDeleteConfirm(true)}
+              aria-label="Eliminar nota"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                lineHeight: 1, flexShrink: 0,
+                color: '#c0392b', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+              title="Eliminar nota"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setActiveNote(null)}
+              aria-label="Cerrar editor"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                lineHeight: 1, flexShrink: 0,
+                color: 'var(--text-secondary)', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onBlur={save}
+            placeholder="Título"
+            aria-label="Título de la nota"
             style={{
-              width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 4,
+              width: '100%', padding: '8px 10px', borderRadius: 6,
+              border: '1px solid rgba(0,0,0,0.10)',
+              background: 'transparent',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+              color: 'inherit', fontSize: 18, fontWeight: 700,
+              outline: 'none',
+            }}
+          />
+        </>
+      ) : (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={() => setEmojiOpen(!emojiOpen)}
+              aria-label="Seleccionar emoji"
+              aria-expanded={emojiOpen}
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                fontSize: 20, display: 'flex', alignItems: 'center',
+                justifyContent: 'center', transition: 'all 0.15s',
+                lineHeight: 1,
+              }}
+            >
+              {emoji}
+            </button>
+            {emojiOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 6,
+                zIndex: 20, background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                padding: 10, width: 270, display: 'grid',
+                gridTemplateColumns: `repeat(9, 1fr)`, gap: 2,
+                animation: 'fadeIn 0.1s ease',
+              }}>
+                {EMOJIS.map(e => (
+                  <button
+                    key={e}
+                    onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
+                    style={{
+                      width: 26, height: 26, borderRadius: 0, border: 'none',
+                      background: e === emoji ? 'var(--accent-light)' : 'transparent',
+                      cursor: 'pointer', fontSize: 16, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                      transition: 'background 0.1s',
+                    }}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={e => { if (e.target.files?.[0]) handleImageInsert(e.target.files[0]); e.target.value = '' }}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            aria-label="Insertar imagen"
+            style={{
+              width: 36, height: 36, borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
               background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-              fontSize: isMobile ? 15 : 18, display: 'flex', alignItems: 'center',
+              display: 'flex', alignItems: 'center',
               justifyContent: 'center', transition: 'all 0.15s',
-              lineHeight: 1,
+              flexShrink: 0, lineHeight: 1,
+            }}
+            title="Insertar imagen"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
+          <input
+            type="text"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onBlur={save}
+            placeholder="Título"
+            aria-label="Título de la nota"
+            style={{
+              flex: 1, padding: '8px 10px', borderRadius: 6,
+              border: '1px solid rgba(0,0,0,0.10)',
+              background: 'transparent',
+              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+              color: 'inherit', fontSize: 18, fontWeight: 700,
+              outline: 'none',
+            }}
+          />
+          <button
+            onClick={() => setPreview(!preview)}
+            aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
+            style={{
+              width: 36, height: 36, borderRadius: 6,
+              border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
+              background: preview ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
+              cursor: 'pointer', lineHeight: 1, flexShrink: 0,
+              color: preview ? 'var(--text)' : 'var(--text-secondary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s',
+            }}
+            title={preview ? 'Editar' : 'Vista previa'}
+          >
+            {preview ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={() => setDeleteConfirm(true)}
+            aria-label="Eliminar nota"
+            style={{
+              width: 36, height: 36, borderRadius: 6,
+              border: '1px solid rgba(0,0,0,0.10)',
+              background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+              lineHeight: 1, flexShrink: 0,
+              color: '#c0392b', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s',
+            }}
+            title="Eliminar nota"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => setActiveNote(null)}
+            aria-label="Cerrar editor"
+            style={{
+              width: 36, height: 36, borderRadius: 6,
+              border: '1px solid rgba(0,0,0,0.10)',
+              background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+              lineHeight: 1, flexShrink: 0,
+              color: 'var(--text-secondary)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.15s',
             }}
           >
-            {emoji}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
           </button>
-          {emojiOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 6,
-              zIndex: 20, background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              padding: 10, width: isMobile ? 216 : 270, display: 'grid',
-              gridTemplateColumns: `repeat(${isMobile ? 8 : 9}, 1fr)`, gap: 2,
-              animation: 'fadeIn 0.1s ease',
-            }}>
-              {EMOJIS.map(e => (
-                <button
-                  key={e}
-                  onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
-                  style={{
-                    width: 26, height: 26, borderRadius: 0, border: 'none',
-                    background: e === emoji ? 'var(--accent-light)' : 'transparent',
-                    cursor: 'pointer', fontSize: 16, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.1s',
-                  }}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
-
-
-
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          onChange={e => { if (e.target.files?.[0]) handleImageInsert(e.target.files[0]); e.target.value = '' }}
-          style={{ display: 'none' }}
-        />
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          aria-label="Insertar imagen"
-          style={{
-            width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 4,
-            border: '1px solid rgba(0,0,0,0.10)',
-            background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-            fontSize: isMobile ? 12 : 14, display: 'flex', alignItems: 'center',
-            justifyContent: 'center', transition: 'all 0.15s',
-            flexShrink: 0, lineHeight: 1,
-          }}
-          title="Insertar imagen"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </button>
-
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          onBlur={save}
-          placeholder="Título"
-          aria-label="Título de la nota"
-          style={{
-            flex: 1, padding: isMobile ? '4px 8px' : '6px 10px', borderRadius: 4,
-            border: '1px solid rgba(0,0,0,0.10)',
-            background: 'transparent',
-            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
-            color: 'inherit', fontSize: isMobile ? 14 : 16, fontWeight: 700,
-            outline: 'none', minWidth: isMobile ? 80 : undefined,
-          }}
-        />
-        <button
-          onClick={() => setPreview(!preview)}
-          aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
-          style={{
-            width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 4,
-            border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
-            background: preview ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
-            cursor: 'pointer', fontSize: isMobile ? 11 : 13, lineHeight: 1, flexShrink: 0,
-            color: preview ? 'var(--text)' : 'var(--text-secondary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.15s',
-          }}
-          title={preview ? 'Editar' : 'Vista previa'}
-        >
-          {preview ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          )}
-        </button>
-        <button
-          onClick={() => setDeleteConfirm(true)}
-          aria-label="Eliminar nota"
-          style={{
-            width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 4,
-            border: '1px solid rgba(0,0,0,0.10)',
-            background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-            fontSize: isMobile ? 11 : 14, lineHeight: 1, flexShrink: 0,
-            color: '#c0392b', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.15s',
-          }}
-          title="Eliminar nota"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-            <line x1="10" y1="11" x2="10" y2="17"/>
-            <line x1="14" y1="11" x2="14" y2="17"/>
-          </svg>
-        </button>
-        <button
-          onClick={() => setActiveNote(null)}
-          aria-label="Cerrar editor"
-          style={{
-            width: isMobile ? 28 : 32, height: isMobile ? 28 : 32, borderRadius: 4,
-            border: '1px solid rgba(0,0,0,0.10)',
-            background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
-            fontSize: isMobile ? 11 : 14, lineHeight: 1, flexShrink: 0,
-            color: 'var(--text-secondary)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            transition: 'all 0.15s',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+      )}
 
       {preview ? (
         <div
           role="region"
           aria-label="Vista previa de Markdown"
           style={{
-            minHeight: 200, padding: 0,
+            minHeight: isMobile ? 0 : 200, padding: 0,
             border: 'none',
             background: 'transparent',
-            color: 'inherit', fontSize: 14, lineHeight: 1.7,
+            color: 'inherit', fontSize: 16, lineHeight: 1.7,
             overflowY: 'auto',
+            flex: isMobile ? 1 : undefined,
           }}>
           <Markdown remarkPlugins={[remarkGfm]}>
             {content || '*Sin contenido*'}
@@ -332,12 +488,13 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
           placeholder="Escribe tu nota aquí... (soporta **Markdown**, Ctrl+V para pegar imágenes)"
           aria-label="Contenido de la nota"
           style={{
-            minHeight: 200, padding: 0,
+            minHeight: isMobile ? 0 : 200, padding: 0,
             border: 'none',
             background: 'transparent',
-            color: 'inherit', fontSize: 14, lineHeight: 1.7,
+            color: 'inherit', fontSize: 16, lineHeight: 1.7,
             resize: 'vertical', outline: 'none', fontFamily: 'inherit',
             width: '100%', boxSizing: 'border-box',
+            flex: isMobile ? 1 : undefined,
           }}
         />
       )}
@@ -380,25 +537,25 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             style={{
               padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',
-              fontSize: 12, width: 90, outline: 'none',
-            }}
-          />
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{
-              position: 'absolute', left: 8, opacity: 0.4, pointerEvents: 'none',
-            }}>
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-            </svg>
-            <input
-              type="text"
-              value={note.folder === 'default' ? '' : note.folder}
-              onChange={e => updateNote(note.id, { folder: e.target.value || 'default' })}
-              placeholder="carpeta"
-              aria-label="Carpeta de la nota"
-              style={{
-                padding: '3px 10px 3px 24px', borderRadius: 0, border: '1px dashed var(--border)',
-                background: 'transparent', color: 'var(--text-secondary)',
-                fontSize: 12, width: 90, outline: 'none',
+            fontSize: 13, width: 100, outline: 'none',
+          }}
+        />
+        <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{
+            position: 'absolute', left: 8, opacity: 0.4, pointerEvents: 'none',
+          }}>
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <input
+            type="text"
+            value={note.folder === 'default' ? '' : note.folder}
+            onChange={e => updateNote(note.id, { folder: e.target.value || 'default' })}
+            placeholder="carpeta"
+            aria-label="Carpeta de la nota"
+            style={{
+              padding: '5px 10px 5px 28px', borderRadius: 6, border: '1px dashed var(--border)',
+              background: 'transparent', color: 'var(--text-secondary)',
+              fontSize: 13, width: 100, outline: 'none',
               }}
             />
           </div>
@@ -442,11 +599,14 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             color: 'var(--text-secondary)', fontSize: 12, padding: 0,
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
           Historial de versiones
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>
+            <path d="M3 1L7 5L3 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
         {versionsOpen && (
           <div style={{
@@ -527,7 +687,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             aria-label="Seleccionar color de nota"
             aria-expanded={colorOpen}
             style={{
-              width: isMobile ? 32 : 24, height: isMobile ? 32 : 24, borderRadius: '50%',
+              width: 36, height: 36, borderRadius: '50%',
               border: '2px solid rgba(0,0,0,0.12)',
               background: note.color || NOTE_COLORS[0],
               cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
@@ -536,7 +696,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             }}
             title="Color de nota"
           >
-            <svg width={isMobile ? 18 : 14} height={isMobile ? 18 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
               <path d="M20 2L9 13l2 2L22 4l-2-2z"/>
               <path d="M3 18l2-2 3 3-2 2-3-3z"/>
               <path d="M5 16l-2 5 5-2"/>
