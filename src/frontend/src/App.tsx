@@ -5,6 +5,8 @@ import { useUIStore } from './stores/uiStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useUrlSync } from './hooks/useUrlSync'
 import { deleteOldTrash, seedSampleNotes, checkDBIntegrity, emergencyReset, getAllNotes } from './db/operations'
+import { useLocaleStore } from './stores/localeStore'
+import { useT } from './i18n'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import NoteGrid from './components/layout/NoteGrid'
@@ -44,6 +46,8 @@ export default function App() {
   const [repairing, setRepairing] = useState(false)
   const seededRef = useRef(false)
   const noteEditorSaveRef = useRef<(() => Promise<void>) | null>(null)
+  const loadLocale = useLocaleStore(s => s.loadLocale)
+  const t_ = useT()
 
   useKeyboardShortcuts()
   useUrlSync()
@@ -73,6 +77,7 @@ export default function App() {
         setNeedsRepair(true)
         return
       }
+      await loadLocale()
       try {
         await loadNotes()
         const { notes } = useNotesStore.getState()
@@ -140,7 +145,7 @@ export default function App() {
       if (note) {
         setActiveNote(noteId)
       } else {
-        setUrlError(`Nota no encontrada: ${noteId.slice(0, 8)}...`)
+        setUrlError(t_('app.note_not_found', { id: noteId.slice(0, 8) }))
         setTimeout(() => setUrlError(null), 4000)
       }
     }
@@ -151,7 +156,7 @@ export default function App() {
         n.content.toLowerCase().includes(decoded.toLowerCase())
       )
       if (!exists) {
-        setUrlError(`Sin resultados para "${decoded}"`)
+        setUrlError(t_('app.no_results', { query: decoded }))
         setTimeout(() => setUrlError(null), 4000)
       }
     }
@@ -214,16 +219,16 @@ export default function App() {
           background: '#e85d3a', color: '#fff', padding: '8px 16px',
           fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
         }}>
-          <span>⚠️ Almacenamiento casi lleno. Considera exportar tus notas y eliminar las que no necesites.</span>
+          <span>⚠️ {t_('app.storage_warning')}</span>
           <button
             onClick={() => setStorageWarning(false)}
-            aria-label="Descartar advertencia"
+            aria-label={t_('app.dismiss')}
             style={{
               background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff',
               padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 11,
             }}
           >
-            X
+            {t_('app.dismiss')}
           </button>
         </div>
       )}
@@ -250,7 +255,7 @@ export default function App() {
         {/* Pestaña flotante para abrir/cerrar sidebar */}
         <button
           onClick={toggleSidebar}
-          aria-label={sidebarOpen ? 'Esconder barra lateral' : 'Mostrar barra lateral'}
+          aria-label={sidebarOpen ? t_('app.hide_sidebar') : t_('app.show_sidebar')}
           aria-expanded={sidebarOpen}
           style={{
             position: isMobile ? 'fixed' : 'absolute',
@@ -349,12 +354,12 @@ export default function App() {
           >
             <div style={{ padding: '24px 28px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-                {showDeleteAllConfirm === 'first' ? '🔥 Borrar Todo' : '⚠️ Confirmación final'}
+                {showDeleteAllConfirm === 'first' ? `🔥 ${t_('app.delete_all_title_first')}` : `⚠️ ${t_('app.delete_all_title_second')}`}
               </h2>
               <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 {showDeleteAllConfirm === 'first'
-                  ? '¿Estás seguro de que quieres borrar todas las notas? Esta acción no se puede deshacer.'
-                  : 'Esto eliminará permanentemente TODAS las notas, versiones y configuraciones. ¿Estás absolutamente seguro?'}
+                  ? t_('app.delete_all_msg_first')
+                  : t_('app.delete_all_msg_second')}
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', padding: '20px 28px 24px' }}>
@@ -365,7 +370,7 @@ export default function App() {
                   background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
                 }}
               >
-                Cancelar
+                {t_('app.cancel')}
               </button>
                <button
                 onClick={() => {
@@ -378,7 +383,7 @@ export default function App() {
                   color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
                 }}
               >
-                {showDeleteAllConfirm === 'first' ? 'Sí, borrar todo' : 'Eliminar permanentemente'}
+                {showDeleteAllConfirm === 'first' ? t_('app.yes_delete_all') : t_('app.delete_permanently')}
               </button>
             </div>
           </div>
@@ -389,7 +394,7 @@ export default function App() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Editor de nota"
+          aria-label={t_('app.editor_dialog_label')}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
             zIndex: 1000, display: 'flex', alignItems: isMobile ? 'stretch' : 'center',
@@ -428,8 +433,8 @@ export default function App() {
       {showTrash && trashNotes.length > 0 && (
         <button
           onClick={() => setShowEmptyTrashConfirm(true)}
-          aria-label="Vaciar papelera"
-          title="Vaciar papelera"
+          aria-label={t_('trash.aria')}
+          title={t_('trash.empty_button')}
           style={{
             position: 'fixed', bottom: 84, right: 20,
             width: 56, height: 56, borderRadius: '50%',
@@ -468,10 +473,10 @@ export default function App() {
           >
             <div style={{ padding: '24px 28px 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-                Vaciar papelera
+                {t_('trash.empty_title')}
               </h2>
               <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                ¿Estás seguro de vaciar la papelera? Se eliminarán permanentemente {trashNotes.length} nota{trashNotes.length !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
+                {t_('trash.empty_confirm', { n: trashNotes.length, s: trashNotes.length !== 1 ? 's' : '' })}
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', padding: '20px 28px 24px' }}>
@@ -482,7 +487,7 @@ export default function App() {
                   background: 'transparent', color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
                 }}
               >
-                Cancelar
+                {t_('app.cancel')}
               </button>
               <button
                 onClick={async () => {
@@ -495,7 +500,7 @@ export default function App() {
                   color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600,
                 }}
               >
-                Vaciar papelera
+                {t_('trash.empty_button')}
               </button>
             </div>
           </div>
@@ -510,10 +515,10 @@ export default function App() {
         }}>
           <span style={{ fontSize: 48 }}>🔧</span>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)', textAlign: 'center' }}>
-            La base de datos necesita reparación
+            {t_('app.repair_title')}
           </h2>
           <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 360, lineHeight: 1.5 }}>
-            La base de datos local se ha corrompido. Podemos intentar repararla, pero se perderán todas las notas.
+            {t_('app.repair_desc')}
           </p>
           <button
             disabled={repairing}
@@ -531,7 +536,7 @@ export default function App() {
                 setNeedsRepair(false)
               } catch (err) {
                 console.error('Repair failed:', err)
-                setUrlError('No se pudo reparar. Cierra otras pestañas y recarga.')
+                setUrlError(t_('app.repair_failed'))
                 setTimeout(() => setUrlError(null), 8000)
               } finally {
                 setRepairing(false)
@@ -543,7 +548,7 @@ export default function App() {
               fontSize: 15, fontWeight: 600, opacity: repairing ? 0.6 : 1,
             }}
           >
-            {repairing ? 'Reparando...' : 'Reparar y reiniciar'}
+            {repairing ? t_('app.repairing') : t_('app.repair_button')}
           </button>
         </div>
       )}
@@ -559,12 +564,12 @@ export default function App() {
             if (!integrity.ok) {
               setNeedsRepair(true)
             } else {
-              setUrlError('Error al crear nota. Recarga la página e intenta de nuevo.')
+              setUrlError(t_('app.create_note_error'))
               setTimeout(() => setUrlError(null), 5000)
             }
           }
         }}
-        aria-label="Crear nueva nota"
+        aria-label={t_('app.create_note')}
         style={{
           position: 'fixed', bottom: 20, right: 20,
           width: 56, height: 56, borderRadius: '50%',
