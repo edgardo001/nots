@@ -53,9 +53,11 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
   const [versionsLoaded, setVersionsLoaded] = useState(false)
   const [viewingVersionId, setViewingVersionId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [markdownHelpOpen, setMarkdownHelpOpen] = useState(false)
   const emojiRef = useRef<HTMLDivElement>(null)
   const colorRef = useRef<HTMLDivElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLTextAreaElement>(null)
   const savedVersionRef = useRef<string>('')
 
 
@@ -168,6 +170,22 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
     }
   }, [handleImageInsert])
 
+  const insertAtCursor = useCallback((text: string) => {
+    const ta = contentRef.current
+    if (ta) {
+      const start = ta.selectionStart
+      const end = ta.selectionEnd
+      const newContent = content.slice(0, start) + text + content.slice(end)
+      setContent(newContent)
+      requestAnimationFrame(() => {
+        ta.focus()
+        ta.selectionStart = ta.selectionEnd = start + text.length
+      })
+    } else {
+      setContent(prev => prev + '\n' + text)
+    }
+  }, [content])
+
   if (!note) return null
 
   const allTags = [...new Set(notes.filter(n => !n.deletedAt).flatMap(n => n.tags))]
@@ -177,6 +195,24 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
       {isMobile ? (
         <>
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <button
+              onClick={() => setActiveNote(null)}
+              aria-label="Cerrar sin guardar"
+              title="Cerrar"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                lineHeight: 1, flexShrink: 0, color: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
             <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
               <button
                 onClick={() => setEmojiOpen(!emojiOpen)}
@@ -273,9 +309,28 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 </svg>
               )}
             </button>
-          <button
-            onClick={() => setDeleteConfirm(true)}
-            aria-label="Eliminar nota"
+            <button
+              onClick={() => setMarkdownHelpOpen(true)}
+              aria-label="Ayuda de Markdown"
+              title="Ayuda Markdown"
+              style={{
+                width: 36, height: 36, borderRadius: 6,
+                border: '1px solid rgba(0,0,0,0.10)',
+                background: 'rgba(0,0,0,0.04)', cursor: 'pointer',
+                lineHeight: 1, flexShrink: 0, color: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setDeleteConfirm(true)}
+              aria-label="Eliminar nota"
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -294,8 +349,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 <line x1="14" y1="11" x2="14" y2="17"/>
               </svg>
             </button>
-            <button
-              onClick={async () => { await save(); setActiveNote(null) }}
+          <button
+            onClick={async () => { await save(); setActiveNote(null) }}
               aria-label="Guardar y cerrar"
               title="Guardar y cerrar"
               style={{
@@ -508,6 +563,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
         </div>
       ) : (
         <textarea
+          ref={contentRef}
           value={content}
           onChange={e => setContent(e.target.value)}
           onBlur={save}
@@ -899,6 +955,84 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             >
               {note?.deletedAt ? 'Eliminar permanentemente' : 'Mover a papelera'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {markdownHelpOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          onClick={() => setMarkdownHelpOpen(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 0, overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.18)', width: '90%', maxWidth: 480,
+            }}
+          >
+            <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                Ayuda de Markdown
+              </h2>
+              <button
+                onClick={() => setMarkdownHelpOpen(false)}
+                style={{
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-secondary)', fontSize: 20, lineHeight: 1, padding: 4,
+                }}
+                aria-label="Cerrar"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <div style={{ padding: '16px 28px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {([
+                ['**negrita**', 'negrita'],
+                ['*cursiva*', 'cursiva'],
+                ['~~tachado~~', 'tachado'],
+                ['# Título', 'Encabezado'],
+                ['## Subtítulo', 'Sub-encabezado'],
+                ['- Lista', 'Lista viñetas'],
+                ['1. Lista', 'Lista numerada'],
+                ['- [ ] Tarea', 'Tarea pendiente'],
+                ['- [x] Tarea', 'Tarea hecha'],
+                ['`código`', 'Código inline'],
+                ['```código```', 'Bloque código'],
+                ['> cita', 'Blockquote'],
+                ['[texto](url)', 'Enlace'],
+                ['![alt](url)', 'Imagen'],
+                ['---', 'Línea horizontal'],
+                ['| col1 | col2 |', 'Tabla'],
+              ] as const).map(([code, desc]) => (
+                <button
+                  key={code}
+                  onClick={() => {
+                    insertAtCursor(code + ' ')
+                    setMarkdownHelpOpen(false)
+                  }}
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 2,
+                    padding: '8px 10px', borderRadius: 0,
+                    background: 'var(--bg)', fontSize: 13,
+                    border: '1px solid transparent',
+                    cursor: 'pointer', textAlign: 'left', color: 'inherit', fontFamily: 'inherit',
+                    transition: 'border-color 0.1s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent' }}
+                >
+                  <code style={{ fontSize: 12, color: 'var(--accent)' }}>{code}</code>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.7 }}>{desc}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
