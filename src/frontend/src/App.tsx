@@ -168,8 +168,8 @@ export default function App() {
           <div
             onClick={() => setSidebarOpen(false)}
             style={{
-              position: 'absolute', inset: 0, zIndex: 97,
-              background: 'transparent',
+              position: 'fixed', inset: 0, zIndex: 97,
+              background: 'rgba(0,0,0,0.25)',
             }}
           />
         )}
