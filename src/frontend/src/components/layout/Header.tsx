@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef, createRef } from 'react'
 import { useNotesStore } from '../../stores/notesStore'
 import { useUIStore, themeCycle } from '../../stores/uiStore'
+import { useLocaleStore } from '../../stores/localeStore'
+import { useT } from '../../i18n'
 import SearchBar from '../sidebar/SearchBar'
 
 export function noteToMarkdown(note: { title: string; content: string; tags: string[]; emoji: string; color: string; createdAt: string; updatedAt: string }): string {
@@ -23,11 +25,14 @@ interface HeaderProps {
 }
 
 export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
+  const t_ = useT()
   const viewMode = useNotesStore(s => s.viewMode)
   const setViewMode = useNotesStore(s => s.setViewMode)
   const notes = useNotesStore(s => s.notes)
   const theme = useUIStore(s => s.theme)
   const setTheme = useUIStore(s => s.setTheme)
+  const locale = useLocaleStore(s => s.locale)
+  const setLocale = useLocaleStore(s => s.setLocale)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -64,7 +69,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
           </span>
         </div>
         <span className="hide-mobile" style={{ fontSize: 9, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 500 }}>
-          no necesitas otra app de notas
+          {t_('header.subtitle')}
         </span>
       </div>
 
@@ -76,7 +81,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Menú"
+            aria-label={t_('header.menu')}
             aria-expanded={menuOpen}
             style={{
               padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)',
@@ -102,7 +107,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
         }}>
           <button
             onClick={() => { setViewMode(viewMode === 'postit' ? 'list' : 'postit'); setMenuOpen(false) }}
-            aria-label="Cambiar vista"
+            aria-label={t_('header.switch_view')}
             style={{
               padding: '10px 16px', borderRadius: 6, border: 'none',
               background: viewMode === 'list' ? 'var(--accent-light)' : 'transparent',
@@ -128,11 +133,11 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
                 <rect x="3" y="14" width="7" height="7"/>
               </svg>
             )}
-            {viewMode === 'postit' ? 'Lista' : 'Post-It'}
+            {viewMode === 'postit' ? t_('header.view_list') : t_('header.view_postit')}
           </button>
           <button
             onClick={() => { setTheme(themeCycle(theme)); setMenuOpen(false) }}
-            aria-label="Cambiar tema"
+            aria-label={t_('header.switch_theme')}
             style={{
               padding: '10px 16px', borderRadius: 6, border: 'none',
               background: 'transparent', color: 'var(--text)',
@@ -164,7 +169,24 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
               </svg>
             )}
-            {theme === 'dark' ? 'Oscuro' : theme === 'system' ? 'Sistema' : 'Claro'}
+            {theme === 'dark' ? t_('header.theme_dark') : theme === 'system' ? t_('header.theme_system') : t_('header.theme_light')}
+          </button>
+          <button
+            onClick={() => { setLocale(locale === 'es' ? 'en' : 'es'); setMenuOpen(false) }}
+            style={{
+              padding: '10px 16px', borderRadius: 6, border: 'none',
+              background: 'transparent', color: 'var(--text)',
+              cursor: 'pointer', fontSize: 14, fontWeight: 500,
+              textAlign: 'left', transition: 'all 0.1s',
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span>{locale === 'es' ? 'English' : 'Español'}</span>
           </button>
           <button
             onClick={() => { setMenuOpen(false); useUIStore.getState().setShowSettings(true) }}
@@ -180,7 +202,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
-            <span>Configuración</span>
+            <span>{t_('header.settings')}</span>
           </button>
           {notes.filter(n => !n.deletedAt).length > 0 && (
             <button
@@ -198,7 +220,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
                 <line x1="10" y1="11" x2="10" y2="17"/>
                 <line x1="14" y1="11" x2="14" y2="17"/>
               </svg>
-              Borrar Todo
+              {t_('header.delete_all')}
             </button>
           )}
           <a
@@ -216,17 +238,17 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            <span>GitHub</span>
+            <span>{t_('header.github')}</span>
           </a>
             </div>
           )}
         </div>
       ) : <>
-        <nav style={{ display: 'flex', gap: 6, alignItems: 'center' }} aria-label="Controles principales">
+        <nav style={{ display: 'flex', gap: 6, alignItems: 'center' }} aria-label={t_('header.nav_label')}>
 
           <button
             onClick={() => setViewMode(viewMode === 'postit' ? 'list' : 'postit')}
-            aria-label={viewMode === 'postit' ? 'Cambiar a vista lista' : 'Cambiar a vista post-it'}
+            aria-label={viewMode === 'postit' ? t_('header.to_list') : t_('header.to_postit')}
             style={{
               padding: '8px 14px', borderRadius: 6, border: '1px solid var(--border)',
               background: viewMode === 'list' ? 'var(--accent)' : 'transparent',
@@ -253,11 +275,11 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
                 <rect x="3" y="14" width="7" height="7"/>
               </svg>
             )}
-            {viewMode === 'postit' ? 'Lista' : 'Post-It'}
+            {viewMode === 'postit' ? t_('header.view_list') : t_('header.view_postit')}
           </button>
           <button
             onClick={() => setTheme(themeCycle(theme))}
-            aria-label={`Tema: ${theme}`}
+            aria-label={t_('header.theme_label', { theme })}
             style={{
               padding: '8px 14px', borderRadius: 6, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
@@ -291,7 +313,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
           </button>
           <button
             onClick={() => useUIStore.getState().setShowSettings(true)}
-            aria-label="Configuración"
+            aria-label={t_('header.settings')}
             style={{
               padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
@@ -299,7 +321,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 16, lineHeight: 1,
             }}
-            title="Configuración"
+            title={t_('header.settings')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <circle cx="12" cy="12" r="3"/>
@@ -310,8 +332,8 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
             href="https://github.com/edgardo001/nots"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="GitHub"
-            title="GitHub"
+            aria-label={t_('header.github')}
+            title={t_('header.github')}
             style={{
               padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
@@ -324,11 +346,29 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
             </svg>
           </a>
+          <button
+            onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+            aria-label={locale === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            title={locale === 'es' ? 'English' : 'Español'}
+            style={{
+              padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text)',
+              cursor: 'pointer', transition: 'all 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, lineHeight: 1,
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </button>
           {notes.filter(n => !n.deletedAt).length > 0 && (
             <button
               onClick={onBorrarTodo}
-              aria-label="Borrar todas las notas"
-              title="Borrar Todo"
+              aria-label={t_('header.delete_all_aria')}
+              title={t_('header.delete_all')}
               style={{
                 padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)',
                 background: 'transparent', color: '#c0392b', cursor: 'pointer',
@@ -342,7 +382,7 @@ export default function Header({ isMobile, onBorrarTodo }: HeaderProps) {
                 <line x1="10" y1="11" x2="10" y2="17"/>
                 <line x1="14" y1="11" x2="14" y2="17"/>
               </svg>
-              Borrar Todo
+              {t_('header.delete_all')}
             </button>
           )}
         </nav>

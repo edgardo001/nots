@@ -8,11 +8,13 @@ import {
 import { useEffect, useState } from 'react'
 import { useNotesStore } from '../../stores/notesStore'
 import { useUIStore } from '../../stores/uiStore'
+import { useT } from '../../i18n'
 import NoteList from '../sidebar/NoteList'
 import type { SortField } from '../../types'
 import { getAttachmentsForNote } from '../../db/operations'
 
 export default function Sidebar() {
+  const t_ = useT()
   const notes = useNotesStore(s => s.notes)
   const activeNoteId = useNotesStore(s => s.activeNoteId)
   const sortField = useNotesStore(s => s.sortField)
@@ -115,7 +117,7 @@ export default function Sidebar() {
         <select
           value={sortField}
           onChange={e => setSortField(e.target.value as SortField)}
-          aria-label="Ordenar notas por"
+          aria-label={t_('sidebar.sort_label')}
           style={{
             flex: 1, padding: '7px 8px', borderRadius: 6,
             border: '1px solid var(--border)', background: 'var(--bg)',
@@ -123,16 +125,16 @@ export default function Sidebar() {
             appearance: 'none', backgroundImage: 'none',
           }}
         >
-          <option value="updatedAt">Recientes</option>
-          <option value="createdAt">Creadas</option>
-          <option value="title">A–Z</option>
+          <option value="updatedAt">{t_('sidebar.sort_recent')}</option>
+          <option value="createdAt">{t_('sidebar.sort_created')}</option>
+          <option value="title">{t_('sidebar.sort_az')}</option>
         </select>
 
         {/* Asc/Desc */}
         <button
           onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-          aria-label={sortOrder === 'asc' ? 'Orden descendente' : 'Orden ascendente'}
-          title={sortOrder === 'asc' ? 'Más antiguo primero' : 'Más reciente primero'}
+          aria-label={sortOrder === 'asc' ? t_('sidebar.sort_desc') : t_('sidebar.sort_asc')}
+          title={sortOrder === 'asc' ? t_('sidebar.sort_oldest') : t_('sidebar.sort_newest')}
           style={{
             padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)',
             background: 'var(--bg)', color: 'var(--text-secondary)',
@@ -146,8 +148,8 @@ export default function Sidebar() {
         <button
           onClick={() => setFiltersOpen(o => !o)}
           aria-expanded={filtersOpen}
-          aria-label="Mostrar filtros"
-          title="Filtros"
+          aria-label={t_('sidebar.show_filters')}
+          title={t_('sidebar.filters_title')}
           style={{
             padding: '7px 10px', borderRadius: 6, flexShrink: 0,
             border: `1px solid ${activeFilterCount > 0 ? 'var(--accent)' : 'var(--border)'}`,
@@ -187,14 +189,14 @@ export default function Sidebar() {
               borderBottom: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
-              <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Color</span>
+              <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t_('sidebar.filter_color')}</span>
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {allColors.map(col => (
                   <button
                     key={col}
                     onClick={() => setColorFilter(col === colorFilter ? null : col)}
                     aria-pressed={col === colorFilter}
-                    aria-label={`Filtrar por color ${col}`}
+                    aria-label={`${t_('sidebar.filter_color')} ${col}`}
                     title={col}
                     style={{
                       width: 16, height: 16,
@@ -216,13 +218,13 @@ export default function Sidebar() {
             borderBottom: '1px solid var(--border)',
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
-            <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Fecha</span>
+              <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t_('sidebar.filter_date')}</span>
             <div style={{ display: 'flex', gap: 4, flex: 1, alignItems: 'center' }}>
               <input
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
-                aria-label="Desde"
+                aria-label={t_('sidebar.date_from')}
                 style={{
                   flex: 1, border: '1px solid var(--border)', borderRadius: 4,
                   padding: '3px 4px', fontSize: 10,
@@ -235,7 +237,7 @@ export default function Sidebar() {
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
-                aria-label="Hasta"
+                aria-label={t_('sidebar.date_to')}
                 style={{
                   flex: 1, border: '1px solid var(--border)', borderRadius: 4,
                   padding: '3px 4px', fontSize: 10,
@@ -252,14 +254,14 @@ export default function Sidebar() {
             display: 'flex', alignItems: 'center', gap: 8,
             cursor: 'pointer',
           }}>
-            <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>📎</span>
+            <span style={{ fontSize: 10, color: 'var(--text-secondary)', opacity: 0.6, minWidth: 40, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{t_('sidebar.filter_attachments')}</span>
             <input
               type="checkbox"
               checked={attachmentOnly}
               onChange={e => setAttachmentOnly(e.target.checked)}
               style={{ accentColor: 'var(--accent)' }}
             />
-            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Con adjuntos</span>
+            <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t_('sidebar.with_attachments')}</span>
           </label>
 
           {/* Limpiar todo */}
@@ -273,7 +275,7 @@ export default function Sidebar() {
                 transition: 'background 0.1s',
               }}
             >
-              Limpiar filtros
+              {t_('sidebar.clear_filters')}
             </button>
           )}
         </div>
@@ -285,7 +287,7 @@ export default function Sidebar() {
           {tagFilter && (
             <button
               onClick={() => setTagFilter(null)}
-              aria-label={`Quitar filtro de etiqueta ${tagFilter}`}
+              aria-label={t_('sidebar.remove_tag', { tag: tagFilter })}
               style={{
                 padding: '3px 8px', borderRadius: 12,
                 border: '1px solid var(--accent)', background: 'var(--accent-light)',
@@ -325,16 +327,16 @@ export default function Sidebar() {
           <select
             value={groupBy}
             onChange={e => setGroupBy(e.target.value as 'none' | 'folder' | 'tag')}
-            aria-label="Agrupar notas por"
+            aria-label={t_('sidebar.group_label')}
             style={{
               flex: 1, padding: '6px 8px', borderRadius: 6,
               border: '1px solid var(--border)', background: 'var(--bg)',
               color: 'var(--text-secondary)', fontSize: 11, cursor: 'pointer',
             }}
           >
-            <option value="none">Sin agrupar</option>
-            <option value="folder">Por carpeta</option>
-            <option value="tag">Por etiqueta</option>
+            <option value="none">{t_('sidebar.group_none')}</option>
+            <option value="folder">{t_('sidebar.group_folder')}</option>
+            <option value="tag">{t_('sidebar.group_tag')}</option>
           </select>
         </div>
       )}
@@ -348,7 +350,7 @@ export default function Sidebar() {
             if (next) { useNotesStore.getState().loadTrash() }
             else { useNotesStore.getState().loadNotes() }
           }}
-          aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
+          aria-label={showTrash ? t_('sidebar.hide_trash') : t_('sidebar.show_trash')}
           aria-expanded={showTrash}
           style={{
             margin: '0 12px 10px', padding: '10px 12px', borderRadius: 8,
@@ -363,7 +365,7 @@ export default function Sidebar() {
             <polyline points="3 6 5 6 21 6"/>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
           </svg>
-          <span>Papelera</span>
+          <span>{t_('sidebar.trash')}</span>
           <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
         </button>
       </div>
@@ -391,7 +393,7 @@ export default function Sidebar() {
         ) : (
           (() => {
             const groups = new Map<string, typeof filteredNotes>([])
-            const getKey = (n: typeof filteredNotes[0]) => groupBy === 'folder' ? n.folder : (n.tags[0] || 'Sin etiqueta')
+            const getKey = (n: typeof filteredNotes[0]) => groupBy === 'folder' ? n.folder : (n.tags[0] || t_('sidebar.no_tag'))
             for (const n of filteredNotes) {
               const key = getKey(n)
               if (!groups.has(key)) groups.set(key, [])

@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useSortable } from '@dnd-kit/sortable'
 import type { Note } from '../../types'
 import { useNotesStore } from '../../stores/notesStore'
+import { useT } from '../../i18n'
 
 interface NoteCardProps {
   note: Note
@@ -35,6 +36,7 @@ function getCardStyle(color?: string) {
 }
 
 export default function NoteCard({ note, onClick, onDelete, onRestore, burning }: NoteCardProps) {
+  const t_ = useT()
   const [crumpling, setCrumpling] = useState(false)
   const viewMode = useNotesStore(s => s.viewMode)
   const cardStyle = getCardStyle(note.color)
@@ -78,7 +80,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } }}
         role="button"
         tabIndex={0}
-        aria-label={`Nota: ${note.title || 'Sin título'}`}
+        aria-label={t_('card.aria_label', { title: note.title || t_('card.untitled') })}
         style={{
           ...style,
           position: 'relative',
@@ -106,7 +108,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
         )}
         <span style={{ fontSize: 22, flexShrink: 0 }}>{note.emoji}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>{note.title || 'Sin título'}</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{note.title || t_('card.untitled')}</div>
           <div style={{ fontSize: 12, opacity: 0.6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {note.content ? note.content.slice(0, 80) : '...'}
           </div>
@@ -116,7 +118,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
           {note.author && <span style={{ marginRight: 4 }}>{note.author} · </span>}
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
-        <button onClick={handleDelete} aria-label="Eliminar nota" style={{
+        <button onClick={handleDelete} aria-label={t_('card.delete')} style={{
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 18, opacity: 0.3, padding: '4px 6px', lineHeight: 1, color: cardStyle.text,
         }}>×</button>
@@ -181,7 +183,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
           {onRestore && (
             <button
               onClick={e => { e.stopPropagation(); onRestore() }}
-              aria-label="Restaurar nota"
+              aria-label={t_('card.restore')}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: 16, opacity: 0, padding: '4px 6px', lineHeight: 1,
@@ -194,7 +196,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
           )}
           <button
             onClick={handleDelete}
-            aria-label="Eliminar nota"
+            aria-label={t_('card.delete')}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontSize: 18, opacity: 0, padding: '4px 6px', lineHeight: 1,
@@ -208,7 +210,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore, burning }
       </div>
 
       <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, lineHeight: 1.3 }}>
-        {note.title || 'Sin título'}
+        {note.title || t_('card.untitled')}
       </div>
 
       <div style={{

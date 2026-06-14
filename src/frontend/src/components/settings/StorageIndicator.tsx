@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useT } from '../../i18n'
 
 interface StorageIndicatorProps {
   onClick?: () => void
 }
 
 export default function StorageIndicator({ onClick }: StorageIndicatorProps) {
+  const t_ = useT()
   const [usage, setUsage] = useState<{ used: number; total: number } | null>(null)
 
   useEffect(() => {
@@ -36,8 +38,8 @@ export default function StorageIndicator({ onClick }: StorageIndicatorProps) {
       tabIndex={0}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick?.() }}
       style={{ position: 'relative', width: size, height: size, flexShrink: 0, cursor: 'pointer' }}
-      title={`${usedMB} MB de ${totalMB} MB (${pct.toFixed(1)}%) - Click para detalles`}
-      aria-label={`Almacenamiento: ${usedMB} MB de ${totalMB} MB`}
+      title={t_('storage.click_details', { used: usedMB, total: totalMB, pct: pct.toFixed(1) })}
+      aria-label={t_('storage.aria_label', { used: usedMB, total: totalMB })}
     >
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle

@@ -3,6 +3,7 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Note, NoteVersion } from '../../types'
 import { useNotesStore } from '../../stores/notesStore'
+import { useT } from '../../i18n'
 
 const EMOJIS = [
   '📝', '✅', '📌', '⭐', '💡', '🔔', '📎', '📋', '📅',
@@ -28,6 +29,7 @@ interface NoteEditorProps {
 }
 
 export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProps) {
+  const t_ = useT()
   const notes = useNotesStore(s => s.notes)
   const trashNotes = useNotesStore(s => s.trashNotes)
   const updateNote = useNotesStore(s => s.updateNote)
@@ -106,7 +108,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
       updateNote(note.id, { title, content, emoji, tags })
     }
     if (content !== savedVersionRef.current && content.length > 0) {
-      await saveVersion(note.id, title || 'Sin título', content)
+      await saveVersion(note.id, title || t_('editor.untitled'), content)
       savedVersionRef.current = content
     }
   }, [note, title, content, emoji, updateNote, saveVersion])
@@ -131,7 +133,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
 
   const handleRestoreVersion = async (version: NoteVersion) => {
     if (content.length > 0) {
-      await saveVersion(noteId, title || 'Sin título', content)
+      await saveVersion(noteId, title || t_('editor.untitled'), content)
     }
     await restoreVersion(noteId, version)
     setTitle(version.title)
@@ -197,8 +199,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             <button
               onClick={() => setActiveNote(null)}
-              aria-label="Cerrar sin guardar"
-              title="Cerrar"
+              aria-label={t_('editor.close_without_save')}
+              title={t_('editor.close_title')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -216,7 +218,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
               <button
                 onClick={() => setEmojiOpen(!emojiOpen)}
-                aria-label="Seleccionar emoji"
+                aria-label={t_('editor.select_emoji')}
                 aria-expanded={emojiOpen}
                 style={{
                   width: 36, height: 36, borderRadius: 6,
@@ -235,7 +237,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                   zIndex: 20, background: 'var(--surface)',
                   border: '1px solid var(--border)',
                   borderRadius: 0, boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-                  padding: 10, width: isMobile ? 216 : 270, display: 'grid',
+                  padding: 10, width: isMobile ? 260 : 270, display: 'grid',
                   gridTemplateColumns: `repeat(${isMobile ? 8 : 9}, 1fr)`, gap: 2,
                   animation: 'fadeIn 0.1s ease',
                 }}>
@@ -244,7 +246,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                       key={e}
                       onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
                       style={{
-                        width: 26, height: 26, borderRadius: 0, border: 'none',
+                        width: '100%', aspectRatio: 1, borderRadius: 0, border: 'none',
                         background: e === emoji ? 'var(--accent-light)' : 'transparent',
                         cursor: 'pointer', fontSize: 16, display: 'flex',
                         alignItems: 'center', justifyContent: 'center',
@@ -266,7 +268,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             />
             <button
               onClick={() => imageInputRef.current?.click()}
-              aria-label="Insertar imagen"
+              aria-label={t_('editor.insert_image')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -275,7 +277,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 justifyContent: 'center', transition: 'all 0.15s',
                 flexShrink: 0, lineHeight: 1,
               }}
-              title="Insertar imagen"
+              title={t_('editor.insert_image')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -285,7 +287,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
             <button
               onClick={() => setPreview(!preview)}
-              aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
+              aria-label={preview ? t_('editor.switch_edit') : t_('editor.switch_preview')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
@@ -295,7 +297,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.15s',
               }}
-              title={preview ? 'Editar' : 'Vista previa'}
+              title={preview ? t_('editor.edit_title') : t_('editor.preview_title')}
             >
               {preview ? (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -311,8 +313,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
             <button
               onClick={() => setMarkdownHelpOpen(true)}
-              aria-label="Ayuda de Markdown"
-              title="Ayuda Markdown"
+              aria-label={t_('editor.markdown_help_aria')}
+              title={t_('editor.markdown_help')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -330,7 +332,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
             <button
               onClick={() => setDeleteConfirm(true)}
-              aria-label="Eliminar nota"
+              aria-label={t_('editor.delete_note')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -340,7 +342,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.15s',
               }}
-              title="Eliminar nota"
+              title={t_('editor.delete_note')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
@@ -351,8 +353,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
           <button
             onClick={async () => { await save(); setActiveNote(null) }}
-              aria-label="Guardar y cerrar"
-              title="Guardar y cerrar"
+              aria-label={t_('editor.save_and_close')}
+              title={t_('editor.save_and_close')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -375,8 +377,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             value={title}
             onChange={e => setTitle(e.target.value)}
             onBlur={save}
-            placeholder="Título"
-            aria-label="Título de la nota"
+            placeholder={t_('editor.title_placeholder')}
+            aria-label={t_('editor.title_aria')}
             style={{
               width: '100%', padding: '8px 10px', borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
@@ -392,7 +394,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
             <button
               onClick={() => setEmojiOpen(!emojiOpen)}
-              aria-label="Seleccionar emoji"
+              aria-label={t_('editor.select_emoji')}
               aria-expanded={emojiOpen}
               style={{
                 width: 36, height: 36, borderRadius: 6,
@@ -420,7 +422,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                     key={e}
                     onClick={() => { setEmoji(e); setEmojiOpen(false); updateNote(note.id, { emoji: e }); }}
                     style={{
-                      width: 26, height: 26, borderRadius: 0, border: 'none',
+                      width: '100%', aspectRatio: 1, borderRadius: 0, border: 'none',
                       background: e === emoji ? 'var(--accent-light)' : 'transparent',
                       cursor: 'pointer', fontSize: 16, display: 'flex',
                       alignItems: 'center', justifyContent: 'center',
@@ -442,7 +444,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           />
           <button
             onClick={() => imageInputRef.current?.click()}
-            aria-label="Insertar imagen"
+            aria-label={t_('editor.insert_image')}
             style={{
               width: 36, height: 36, borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
@@ -451,7 +453,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
               justifyContent: 'center', transition: 'all 0.15s',
               flexShrink: 0, lineHeight: 1,
             }}
-            title="Insertar imagen"
+            title={t_('editor.insert_image')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -464,8 +466,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             value={title}
             onChange={e => setTitle(e.target.value)}
             onBlur={save}
-            placeholder="Título"
-            aria-label="Título de la nota"
+            placeholder={t_('editor.title_placeholder')}
+            aria-label={t_('editor.title_aria')}
             style={{
               flex: 1, padding: '8px 10px', borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
@@ -477,7 +479,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           />
           <button
             onClick={() => setPreview(!preview)}
-            aria-label={preview ? 'Cambiar a edición' : 'Cambiar a vista previa'}
+            aria-label={preview ? t_('editor.switch_edit') : t_('editor.switch_preview')}
             style={{
               width: 36, height: 36, borderRadius: 6,
               border: `1px solid ${preview ? 'rgba(0,0,0,0.20)' : 'rgba(0,0,0,0.10)'}`,
@@ -487,7 +489,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'all 0.15s',
             }}
-            title={preview ? 'Editar' : 'Vista previa'}
+            title={preview ? t_('editor.edit_title') : t_('editor.preview_title')}
           >
             {preview ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -503,7 +505,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
             <button
               onClick={() => setDeleteConfirm(true)}
-              aria-label="Eliminar nota"
+              aria-label={t_('editor.delete_note')}
               style={{
                 width: 36, height: 36, borderRadius: 6,
                 border: '1px solid rgba(0,0,0,0.10)',
@@ -513,7 +515,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 alignItems: 'center', justifyContent: 'center',
                 transition: 'all 0.15s',
               }}
-              title="Eliminar nota"
+              title={t_('editor.delete_note')}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
@@ -524,8 +526,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </button>
           <button
             onClick={async () => { await save(); setActiveNote(null) }}
-            aria-label="Guardar y cerrar"
-            title="Guardar y cerrar"
+            aria-label={t_('editor.save_and_close')}
+            title={t_('editor.save_and_close')}
             style={{
               width: 36, height: 36, borderRadius: 6,
               border: '1px solid rgba(0,0,0,0.10)',
@@ -548,7 +550,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
       {preview ? (
         <div
           role="region"
-          aria-label="Vista previa de Markdown"
+          aria-label={t_('editor.preview_title')}
           style={{
             minHeight: isMobile ? 0 : 200, padding: 0,
             border: 'none',
@@ -558,7 +560,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             flex: isMobile ? 1 : undefined,
           }}>
           <Markdown remarkPlugins={[remarkGfm]}>
-            {content || '*Sin contenido*'}
+            {content || t_('editor.no_content')}
           </Markdown>
         </div>
       ) : (
@@ -568,8 +570,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           onChange={e => setContent(e.target.value)}
           onBlur={save}
           onPaste={handlePaste}
-          placeholder="Escribe tu nota aquí... (soporta **Markdown**, Ctrl+V para pegar imágenes)"
-          aria-label="Contenido de la nota"
+          placeholder={t_('editor.content_placeholder')}
+          aria-label={t_('editor.content_aria')}
           style={{
             minHeight: isMobile ? 0 : 200, padding: 0,
             border: 'none',
@@ -592,7 +594,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             #{tag}
             <button
               onClick={() => updateNote(note.id, { tags: note.tags.filter(t => t !== tag) })}
-              aria-label={`Eliminar etiqueta ${tag}`}
+              aria-label={t_('editor.remove_tag', { tag })}
               style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'var(--accent)', opacity: 0.5, padding: 0, fontSize: 12,
@@ -618,8 +620,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             }}
             enterKeyHint="done"
             inputMode="search"
-            placeholder="+ etiqueta"
-            aria-label="Agregar etiqueta"
+            placeholder={t_('editor.tag_placeholder')}
+            aria-label={t_('editor.tag_aria')}
             style={{
               padding: '3px 10px', borderRadius: 0, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',
@@ -636,8 +638,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             type="text"
             value={note.folder === 'default' ? '' : note.folder}
             onChange={e => updateNote(note.id, { folder: e.target.value || 'default' })}
-            placeholder="carpeta"
-            aria-label="Carpeta de la nota"
+            placeholder={t_('editor.folder_placeholder')}
+            aria-label={t_('editor.folder_aria')}
             style={{
               padding: '5px 10px 5px 28px', borderRadius: 6, border: '1px dashed var(--border)',
               background: 'transparent', color: 'var(--text-secondary)',
@@ -689,7 +691,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          Historial de versiones
+          {t_('editor.version_history')}
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>
             <path d="M3 1L7 5L3 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -701,7 +703,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           }}>
             {versions.length === 0 ? (
               <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--text-secondary)', opacity: 0.6 }}>
-                Sin versiones guardadas
+                {t_('editor.no_versions')}
               </div>
             ) : (
               versions.map(v => (
@@ -718,7 +720,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                   >
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600 }}>
-                        v{v.versionNumber} — {v.title || 'Sin título'}
+                        v{v.versionNumber} — {v.title || t_('editor.untitled')}
                       </div>
                       <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>
                         {new Date(v.savedAt).toLocaleString()}
@@ -736,9 +738,9 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                           color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
                           fontWeight: 600, transition: 'all 0.15s',
                         }}
-                        title="Crear nota nueva desde esta versión"
+                        title={t_('editor.fork_title')}
                       >
-                        Fork
+                        {t_('editor.fork')}
                       </button>
                       <button
                         onClick={e => { e.stopPropagation(); handleRestoreVersion(v) }}
@@ -749,12 +751,12 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                           fontWeight: 600, transition: 'all 0.15s',
                         }}
                       >
-                        Restaurar
+                        {t_('editor.restore')}
                       </button>
                       <button
                         onClick={e => {
                           e.stopPropagation()
-                          if (window.confirm('¿Eliminar esta versión?')) {
+                          if (window.confirm(t_('editor.delete_version_confirm'))) {
                             deleteVersion(v.id)
                             setVersions(versions.filter(x => x.id !== v.id))
                             if (viewingVersionId === v.id) setViewingVersionId(null)
@@ -766,7 +768,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                           color: '#c0392b', cursor: 'pointer', fontSize: 11,
                           fontWeight: 600, transition: 'all 0.15s', lineHeight: 1,
                         }}
-                        title="Eliminar versión"
+                        title={t_('editor.delete_version_title')}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="3 6 5 6 21 6"/>
@@ -781,7 +783,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                       background: 'var(--bg)', fontSize: 13,
                     }}>
                       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-                        {v.title || 'Sin título'}
+                        {v.title || t_('editor.untitled')}
                       </div>
                       <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 10 }}>
                         {new Date(v.savedAt).toLocaleString()}
@@ -790,7 +792,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                         )}
                       </div>
                       <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
-                        <Markdown remarkPlugins={[remarkGfm]}>{v.content || '*Sin contenido*'}</Markdown>
+                        <Markdown remarkPlugins={[remarkGfm]}>{v.content || t_('editor.no_content')}</Markdown>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button
@@ -802,7 +804,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                             fontWeight: 600,
                           }}
                         >
-                          Fork
+                          {t_('editor.fork')}
                         </button>
                         <button
                           onClick={e => { e.stopPropagation(); handleRestoreVersion(v) }}
@@ -813,7 +815,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                             fontWeight: 600,
                           }}
                         >
-                          Restaurar
+                          {t_('editor.restore')}
                         </button>
                         <button
                           onClick={() => setViewingVersionId(null)}
@@ -824,7 +826,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                             fontWeight: 600,
                           }}
                         >
-                          Cerrar vista
+                          {t_('editor.close_view')}
                         </button>
                       </div>
                     </div>
@@ -838,10 +840,10 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.5 }}>
-          {note.author && <span style={{ marginRight: 8 }}>Por {note.author} · </span>}
-          Creado {new Date(note.createdAt).toLocaleString()} · Última edición {new Date(note.updatedAt).toLocaleString()}
+          {note.author && <span style={{ marginRight: 8 }}>{t_('editor.by_author', { author: note.author })}</span>}
+          {t_('editor.created_edited', { created: new Date(note.createdAt).toLocaleString(), updated: new Date(note.updatedAt).toLocaleString() })}
           {note.createdLat != null && note.createdLng != null && (
-            <span title={`Creado en: ${note.createdLat.toFixed(4)}, ${note.createdLng.toFixed(4)}`}>
+            <span title={t_('editor.created_at', { lat: note.createdLat.toFixed(4), lng: note.createdLng.toFixed(4) })}>
               {' · '}📍 {note.createdLat.toFixed(2)}, {note.createdLng.toFixed(2)}
             </span>
           )}
@@ -849,7 +851,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
         <div ref={colorRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={() => setColorOpen(!colorOpen)}
-            aria-label="Seleccionar color de nota"
+            aria-label={t_('editor.select_color')}
             aria-expanded={colorOpen}
             style={{
               width: 36, height: 36, borderRadius: '50%',
@@ -859,7 +861,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: 0,
             }}
-            title="Color de nota"
+            title={t_('editor.color_title')}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
               <path d="M20 2L9 13l2 2L22 4l-2-2z"/>
@@ -881,7 +883,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 <button
                   key={c}
                   onClick={() => { updateNote(note.id, { color: c }); setColorOpen(false); }}
-                  aria-label={`Color de fondo ${i + 1}`}
+                  aria-label={t_('editor.color_bg', { n: i + 1 })}
                   style={{
                     width: 24, height: 24, borderRadius: '50%',
                     border: c === (note.color || NOTE_COLORS[0])
@@ -916,7 +918,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-                Eliminar nota
+                {t_('editor.delete_modal_title')}
               </h2>
               <button
                 onClick={() => setDeleteConfirm(false)}
@@ -924,7 +926,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                   background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)',
                   fontSize: 20, lineHeight: 1, padding: 4, display: 'flex',
                 }}
-                aria-label="Cerrar"
+                aria-label={t_('editor.close_aria')}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -934,8 +936,8 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </div>
 
             <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              ¿Estás seguro de que quieres eliminar esta nota?
-              {note?.deletedAt ? ' Esta acción no se puede deshacer.' : ' Se moverá a la papelera.'}
+              {t_('editor.delete_confirm_msg')}
+              {note?.deletedAt ? t_('editor.delete_irreversible') : t_('editor.delete_to_trash')}
             </p>
 
             <button
@@ -953,7 +955,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                 color: '#fff', fontWeight: 600,
               }}
             >
-              {note?.deletedAt ? 'Eliminar permanentemente' : 'Mover a papelera'}
+              {note?.deletedAt ? t_('app.delete_permanently') : t_('editor.move_to_trash')}
             </button>
           </div>
         </div>
@@ -976,7 +978,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
           >
             <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
-                Ayuda de Markdown
+                {t_('editor.markdown_modal_title')}
               </h2>
               <button
                 onClick={() => setMarkdownHelpOpen(false)}
@@ -984,7 +986,7 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
                   background: 'transparent', border: 'none', cursor: 'pointer',
                   color: 'var(--text-secondary)', fontSize: 20, lineHeight: 1, padding: 4,
                 }}
-                aria-label="Cerrar"
+                aria-label={t_('editor.close_aria')}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/>
@@ -994,22 +996,22 @@ export default function NoteEditor({ noteId, isMobile, saveRef }: NoteEditorProp
             </div>
             <div style={{ padding: '16px 28px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {([
-                ['**negrita**', 'negrita'],
-                ['*cursiva*', 'cursiva'],
-                ['~~tachado~~', 'tachado'],
-                ['# Título', 'Encabezado'],
-                ['## Subtítulo', 'Sub-encabezado'],
-                ['- Lista', 'Lista viñetas'],
-                ['1. Lista', 'Lista numerada'],
-                ['- [ ] Tarea', 'Tarea pendiente'],
-                ['- [x] Tarea', 'Tarea hecha'],
-                ['`código`', 'Código inline'],
-                ['```código```', 'Bloque código'],
-                ['> cita', 'Blockquote'],
-                ['[texto](url)', 'Enlace'],
-                ['![alt](url)', 'Imagen'],
-                ['---', 'Línea horizontal'],
-                ['| col1 | col2 |', 'Tabla'],
+                ['**negrita**', t_('editor.md_bold')],
+                ['*cursiva*', t_('editor.md_italic')],
+                ['~~tachado~~', t_('editor.md_strikethrough')],
+                ['# Título', t_('editor.md_heading')],
+                ['## Subtítulo', t_('editor.md_subheading')],
+                ['- Lista', t_('editor.md_bullet_list')],
+                ['1. Lista', t_('editor.md_numbered_list')],
+                ['- [ ] Tarea', t_('editor.md_task_pending')],
+                ['- [x] Tarea', t_('editor.md_task_done')],
+                ['`código`', t_('editor.md_inline_code')],
+                ['```código```', t_('editor.md_code_block')],
+                ['> cita', t_('editor.md_blockquote')],
+                ['[texto](url)', t_('editor.md_link')],
+                ['![alt](url)', t_('editor.md_image')],
+                ['---', t_('editor.md_horizontal_rule')],
+                ['| col1 | col2 |', t_('editor.md_table')],
               ] as const).map(([code, desc]) => (
                 <button
                   key={code}

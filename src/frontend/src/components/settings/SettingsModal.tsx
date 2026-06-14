@@ -3,9 +3,17 @@ import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import { getSetting, setSetting } from '../../db/operations'
 import { useNotesStore } from '../../stores/notesStore'
+import { useLocaleStore } from '../../stores/localeStore'
+import { useT } from '../../i18n'
 import { noteToMarkdown } from '../layout/Header'
 
 const sections = ['Perfil', 'Idioma', 'Almacenamiento', 'Exportar / Importar'] as const
+const sectionKeys: Record<string, string> = {
+  'Perfil': 'settings.sections.profile',
+  'Idioma': 'settings.sections.language',
+  'Almacenamiento': 'settings.sections.storage',
+  'Exportar / Importar': 'settings.sections.export',
+}
 type Section = typeof sections[number]
 
 function formatBytes(bytes: number): string {
@@ -17,6 +25,7 @@ function formatBytes(bytes: number): string {
 }
 
 function StorageSection() {
+  const t_ = useT()
   const [usage, setUsage] = useState<{ used: number; total: number } | null>(null)
 
   useEffect(() => {
@@ -28,8 +37,7 @@ function StorageSection() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-        Este círculo muestra el espacio que ocupan tus notas en el navegador.
-        Toda la información se almacena localmente: no se envía nada a ningún servidor.
+        {t_('settings.storage_desc')}
       </p>
 
       {usage && (() => {
@@ -59,7 +67,7 @@ function StorageSection() {
               </span>
             </div>
             <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              {usedFmt} de {totalFmt} · {pct.toFixed(1)}%
+              {t_('settings.storage_used', { used: usedFmt, total: totalFmt, pct: pct.toFixed(1) })}
             </span>
           </div>
         )
@@ -67,16 +75,15 @@ function StorageSection() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--text-primary)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Notas</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{t_('settings.storage_notes')}</span>
           <strong>{useNotesStore.getState().notes.filter(n => !n.deletedAt).length}</strong>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>En papelera</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{t_('settings.storage_trash')}</span>
           <strong>{useNotesStore.getState().notes.filter(n => !!n.deletedAt).length}</strong>
         </div>
         <p style={{ margin: 0, fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-          Los datos se almacenan en <strong>IndexedDB</strong> dentro de tu navegador.
-          Puedes liberar espacio exportando notas y vaciando la papelera.
+          {t_('settings.storage_info')}
         </p>
       </div>
     </div>
@@ -84,6 +91,7 @@ function StorageSection() {
 }
 
 function ExportImportSection() {
+  const t_ = useT()
   const notes = useNotesStore(s => s.notes)
   const addNote = useNotesStore(s => s.addNote)
   const updateNote = useNotesStore(s => s.updateNote)
@@ -93,11 +101,11 @@ function ExportImportSection() {
     const zip = new JSZip()
     const activeNotes = notes.filter(n => !n.deletedAt)
     for (const note of activeNotes) {
-      const filename = `${note.title || 'sin-titulo'}.md`.replace(/[^a-zA-Z0-9áéíóúñü.-]/g, '_')
+      const filename = `${note.title || 'untitled'}.md`.replace(/[^a-zA-Z0-9áéíóúñü.-]/g, '_')
       zip.file(filename, noteToMarkdown(note))
     }
     const blob = await zip.generateAsync({ type: 'blob' })
-    saveAs(blob, `notas-export-${new Date().toISOString().slice(0, 10)}.zip`)
+    saveAs(blob, `${t_('settings.export_filename')}${new Date().toISOString().slice(0, 10)}.zip`)
   }, [notes])
 
   const importFiles = useCallback(async (files: FileList | null) => {
@@ -134,7 +142,7 @@ function ExportImportSection() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-        Exporta todas tus notas como archivos Markdown en un ZIP, o importa archivos .md.
+        {t_('settings.export_desc')}
       </p>
       <button
         onClick={exportAll}
@@ -149,7 +157,7 @@ function ExportImportSection() {
           <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
           <line x1="12" y1="22.08" x2="12" y2="12"/>
         </svg>
-        Exportar ZIP
+        {t_('settings.export_zip')}
       </button>
       <button
         onClick={() => fileRef.current?.click()}
@@ -162,7 +170,7 @@ function ExportImportSection() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
         </svg>
-        Importar .md
+        {t_('settings.import_md')}
       </button>
       <input
         ref={fileRef}
@@ -177,6 +185,7 @@ function ExportImportSection() {
 }
 
 function ProfileSection() {
+  const t_ = useT()
   const [author, setAuthor] = useState('')
   const [saved, setSaved] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -196,13 +205,13 @@ function ProfileSection() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Autor</label>
+      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{t_('settings.author_label')}</label>
       <input
         type="text"
         value={author}
         onChange={e => setAuthor(e.target.value)}
-        placeholder="Tu nombre"
-        aria-label="Nombre del autor"
+        placeholder={t_('settings.author_placeholder')}
+        aria-label={t_('settings.author_aria')}
         style={{
           width: '100%', padding: '10px 14px', borderRadius: 6,
           border: '1px solid var(--border)', background: 'var(--bg)',
@@ -221,14 +230,14 @@ function ProfileSection() {
             fontSize: 14, fontWeight: 600,
           }}
         >
-          Guardar
+          {t_('settings.save')}
         </button>
         {saved && (
           <span style={{ fontSize: 13, color: '#27ae60', display: 'flex', alignItems: 'center', gap: 4 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            Guardado
+            {t_('settings.saved')}
           </span>
         )}
       </div>
@@ -237,12 +246,37 @@ function ProfileSection() {
 }
 
 function IdiomaSection() {
+  const t_ = useT()
+  const locale = useLocaleStore(s => s.locale)
+  const setLocale = useLocaleStore(s => s.setLocale)
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: 120, fontSize: 14, color: 'var(--text-secondary)', opacity: 0.6,
-    }}>
-      Próximamente
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <button
+          onClick={() => setLocale('es')}
+          style={{
+            padding: '12px 16px', borderRadius: 6, border: '1px solid var(--border)',
+            background: locale === 'es' ? 'var(--accent-light)' : 'var(--bg)',
+            color: locale === 'es' ? 'var(--accent)' : 'var(--text)',
+            cursor: 'pointer', fontSize: 14, fontWeight: locale === 'es' ? 600 : 400,
+            textAlign: 'left', transition: 'all 0.1s',
+          }}
+        >
+          🇪🇸 {t_('settings.language_es')}
+        </button>
+        <button
+          onClick={() => setLocale('en')}
+          style={{
+            padding: '12px 16px', borderRadius: 6, border: '1px solid var(--border)',
+            background: locale === 'en' ? 'var(--accent-light)' : 'var(--bg)',
+            color: locale === 'en' ? 'var(--accent)' : 'var(--text)',
+            cursor: 'pointer', fontSize: 14, fontWeight: locale === 'en' ? 600 : 400,
+            textAlign: 'left', transition: 'all 0.1s',
+          }}
+        >
+          🇬🇧 {t_('settings.language_en')}
+        </button>
+      </div>
     </div>
   )
 }
@@ -252,13 +286,14 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ onClose }: SettingsModalProps) {
+  const t_ = useT()
   const [activeSection, setActiveSection] = useState<Section>('Perfil')
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Configuración"
+      aria-label={t_('settings.dialog_aria')}
       style={{
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
         zIndex: 1000, display: 'flex', alignItems: 'center',
@@ -283,7 +318,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
             padding: '20px 16px 12px', fontSize: 14, fontWeight: 700,
             color: 'var(--text)', letterSpacing: '-0.3px',
           }}>
-            Configuración
+            {t_('settings.header')}
           </div>
           {sections.map(s => (
             <button
@@ -298,7 +333,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
                 borderRight: activeSection === s ? '2px solid var(--accent)' : '2px solid transparent',
               }}
             >
-              {s}
+              {t_(sectionKeys[s] || s)}
             </button>
           ))}
         </div>
@@ -310,7 +345,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
         }}>
           <button
             onClick={onClose}
-            aria-label="Cerrar configuración"
+            aria-label={t_('settings.close_aria')}
             style={{
               position: 'absolute', top: 12, right: 12,
               background: 'transparent', border: 'none', cursor: 'pointer',
@@ -325,7 +360,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
 
           <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', marginBottom: 20, marginTop: 4 }}>
-            {activeSection}
+            {t_(sectionKeys[activeSection] || activeSection)}
           </div>
 
           {activeSection === 'Perfil' && <ProfileSection />}
@@ -347,7 +382,7 @@ export default function SettingsModal({ onClose }: SettingsModalProps) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{ verticalAlign: 'middle', marginRight: 4 }}>
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
               </svg>
-              github.com/edgardo001/nots
+              {t_('settings.footer_link')}
             </a>
           </div>
         </div>

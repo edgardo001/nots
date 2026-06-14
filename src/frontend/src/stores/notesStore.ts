@@ -15,6 +15,7 @@ import {
 } from '../db/operations';
 import { getCurrentPosition } from '../utils/geolocation';
 import { getSetting, setSetting } from '../db/operations';
+import { t } from '../i18n';
 
 function sortNotes(notes: Note[], field: SortField, order: SortOrder): Note[] {
   const sorted = [...notes].sort((a, b) => {
@@ -235,7 +236,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   forkFromVersion: async (version: NoteVersion) => {
     const geo = await getCurrentPosition();
     const note = await dbAddNote({
-      title: `${version.title} (fork)`,
+      title: `${version.title}${t('notes.fork_suffix')}`,
       content: version.content,
       ...(geo && { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng }),
     });

@@ -1,12 +1,13 @@
 import { useNotesStore } from '../../stores/notesStore'
-import { useUIStore } from '../../stores/uiStore'
+import { useT } from '../../i18n'
 
 export default function SearchBar() {
+  const t_ = useT()
   const searchQuery = useNotesStore(s => s.searchQuery)
   const setSearchQuery = useNotesStore(s => s.setSearchQuery)
 
   return (
-    <div style={{ position: 'relative', width: '100%' }} role="search" aria-label="Buscar notas">
+    <div style={{ position: 'relative', width: '100%' }} role="search" aria-label={t_('search.aria')}>
       <svg style={{
         position: 'absolute', left: 12, top: '50%',
         transform: 'translateY(-50%)', opacity: 0.3,
@@ -20,8 +21,8 @@ export default function SearchBar() {
         data-search-input
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        placeholder="Buscar notas... (Ctrl+F)"
-        aria-label="Buscar notas"
+        placeholder={t_('search.placeholder')}
+        aria-label={t_('search.aria')}
         style={{
           width: '100%', padding: '8px 12px 8px 34px',
           borderRadius: 0, border: '1px solid var(--border)',
@@ -33,7 +34,7 @@ export default function SearchBar() {
       {searchQuery && (
         <button
           onClick={() => setSearchQuery('')}
-          aria-label="Limpiar búsqueda"
+          aria-label={t_('search.clear')}
           style={{
             position: 'absolute', right: 10, top: '50%',
             transform: 'translateY(-50%)', background: 'none',

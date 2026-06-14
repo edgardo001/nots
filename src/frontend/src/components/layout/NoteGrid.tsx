@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/sortable'
 import { useNotesStore } from '../../stores/notesStore'
 import { useUIStore } from '../../stores/uiStore'
+import { useT } from '../../i18n'
 import NoteCard from '../note/NoteCard'
 
 interface NoteGridProps {
@@ -15,6 +16,7 @@ interface NoteGridProps {
 }
 
 export default function NoteGrid({ burning }: NoteGridProps) {
+  const t_ = useT()
   const notes = useNotesStore(s => s.notes)
   const trashNotes = useNotesStore(s => s.trashNotes)
   const searchQuery = useNotesStore(s => s.searchQuery)
@@ -83,7 +85,7 @@ export default function NoteGrid({ burning }: NoteGridProps) {
       }}>
         <span style={{ fontSize: 48, opacity: 0.3 }}>{showTrash ? '🗑️' : '📝'}</span>
         <div style={{ fontSize: 16, fontWeight: 500 }}>
-          {showTrash ? 'La papelera está vacía' : 'No hay notas todavía'}
+          {showTrash ? t_('grid.trash_empty') : t_('grid.no_notes')}
         </div>
         {!showTrash && (
           <button
@@ -95,7 +97,7 @@ export default function NoteGrid({ burning }: NoteGridProps) {
               cursor: 'pointer', marginTop: 4,
             }}
           >
-            + Crear primera nota
+            {t_('grid.create_first')}
           </button>
         )}
       </div>
@@ -150,7 +152,7 @@ export default function NoteGrid({ burning }: NoteGridProps) {
           }}>
             <div style={{ fontSize: 28, lineHeight: 1, marginBottom: 10 }}>{activeNote.emoji}</div>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, lineHeight: 1.3 }}>
-              {activeNote.title || 'Sin título'}
+              {activeNote.title || t_('card.untitled')}
             </div>
             <div style={{
               fontSize: 12, opacity: 0.65, lineHeight: 1.5, flex: 1,

@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import type { Note } from '../../types'
 import { useNotesStore } from '../../stores/notesStore'
+import { useT } from '../../i18n'
 
 interface NoteListProps {
   notes: Note[]
@@ -14,6 +15,7 @@ function SortableItem({ note, activeNoteId, onSelectNote }: {
   activeNoteId: string | null
   onSelectNote: (id: string) => void
 }) {
+  const t_ = useT()
   const viewMode = useNotesStore(s => s.viewMode)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
@@ -51,7 +53,7 @@ function SortableItem({ note, activeNoteId, onSelectNote }: {
           whiteSpace: 'nowrap',
           fontSize: '12px',
         }}>
-          {note.title || 'Sin título'}
+          {note.title || t_('card.untitled')}
         </div>
       </div>
     </button>
