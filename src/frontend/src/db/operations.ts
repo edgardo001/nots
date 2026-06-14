@@ -210,7 +210,6 @@ export async function deleteAllNotes(): Promise<void> {
   await db.clear('notes');
   await db.clear('versions');
   await db.clear('attachments');
-  await db.clear('settings');
 }
 
 export async function seedSampleNotes(): Promise<void> {
