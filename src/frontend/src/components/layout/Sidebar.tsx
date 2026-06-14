@@ -339,6 +339,35 @@ export default function Sidebar() {
         </div>
       )}
 
+      {/* Papelera */}
+      <div style={{ flexShrink: 0, background: 'var(--surface)' }}>
+        <button
+          onClick={() => {
+            const next = !showTrash
+            setShowTrash(next)
+            if (next) { useNotesStore.getState().loadTrash() }
+            else { useNotesStore.getState().loadNotes() }
+          }}
+          aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
+          aria-expanded={showTrash}
+          style={{
+            margin: '0 12px 10px', padding: '10px 12px', borderRadius: 8,
+            border: '1px solid var(--border)', background: 'transparent',
+            color: showTrash ? 'var(--accent)' : 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
+            textAlign: 'left', transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', gap: 6,
+            width: 'calc(100% - 24px)',
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>Papelera</span>
+          <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
+        </button>
+      </div>
+
       {/* Lista de notas */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px' }}>
         {groupBy === 'none' ? (
@@ -408,35 +437,6 @@ export default function Sidebar() {
             )
           })()
         )}
-      </div>
-
-      {/* Papelera */}
-      <div style={{ flexShrink: 0, background: 'var(--surface)' }}>
-        <button
-          onClick={() => {
-            const next = !showTrash
-            setShowTrash(next)
-            if (next) { useNotesStore.getState().loadTrash() }
-            else { useNotesStore.getState().loadNotes() }
-          }}
-          aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
-          aria-expanded={showTrash}
-          style={{
-            margin: 8, padding: '10px 12px', borderRadius: 8,
-            border: '1px solid var(--border)', background: 'transparent',
-            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 12,
-            textAlign: 'left', transition: 'all 0.15s',
-            display: 'flex', alignItems: 'center', gap: 6,
-            width: 'calc(100% - 16px)',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          </svg>
-          <span>Papelera</span>
-          <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
-        </button>
       </div>
     </aside>
   )
