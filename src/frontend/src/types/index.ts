@@ -10,6 +10,10 @@ export interface Note {
   updatedAt: string;
   deletedAt: string | null;
   position: number;
+  createdLat?: number;
+  createdLng?: number;
+  updatedLat?: number;
+  updatedLng?: number;
 }
 
 export interface NoteVersion {
@@ -19,6 +23,8 @@ export interface NoteVersion {
   title: string;
   savedAt: string;
   versionNumber: number;
+  lat?: number;
+  lng?: number;
 }
 
 export interface Attachment {
