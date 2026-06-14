@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 
-export default function StorageIndicator() {
+interface StorageIndicatorProps {
+  onClick?: () => void
+}
+
+export default function StorageIndicator({ onClick }: StorageIndicatorProps) {
   const [usage, setUsage] = useState<{ used: number; total: number } | null>(null)
 
   useEffect(() => {
@@ -27,9 +31,12 @@ export default function StorageIndicator() {
 
   return (
     <div
-      style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}
-      title={`${usedMB} MB de ${totalMB} MB (${pct.toFixed(1)}%)`}
-      role="img"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onClick?.() }}
+      style={{ position: 'relative', width: size, height: size, flexShrink: 0, cursor: 'pointer' }}
+      title={`${usedMB} MB de ${totalMB} MB (${pct.toFixed(1)}%) - Click para detalles`}
       aria-label={`Almacenamiento: ${usedMB} MB de ${totalMB} MB`}
     >
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>

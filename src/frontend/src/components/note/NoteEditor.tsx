@@ -732,41 +732,57 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
       </div>
 
       {deleteConfirm && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
-          zIndex: 2000, display: 'flex', alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <div style={{
-            background: 'var(--surface)', borderRadius: 4,
-            padding: '24px 28px', width: 300, textAlign: 'center',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.2)',
-          }}>
-            <div style={{ fontSize: 14, marginBottom: 20, color: 'inherit' }}>
-              ¿Eliminar esta nota?
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+        <div
+          onClick={() => setDeleteConfirm(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            zIndex: 9999, display: 'flex', alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--surface)', borderRadius: 12,
+              padding: 28, maxWidth: 360, width: '90%',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              display: 'flex', flexDirection: 'column', gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
+                Eliminar nota
+              </h2>
               <button
                 onClick={() => setDeleteConfirm(false)}
                 style={{
-                  padding: '8px 20px', borderRadius: 4, border: '1px solid var(--border)',
-                  background: 'transparent', cursor: 'pointer', fontSize: 13,
-                  color: 'var(--text-secondary)',
+                  background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)',
+                  fontSize: 20, lineHeight: 1, padding: 4, display: 'flex',
                 }}
+                aria-label="Cerrar"
               >
-                Cancelar
-              </button>
-              <button
-                onClick={() => { deleteNote(note.id); setActiveNote(null); setDeleteConfirm(false) }}
-                style={{
-                  padding: '8px 20px', borderRadius: 4, border: 'none',
-                  background: '#c0392b', cursor: 'pointer', fontSize: 13,
-                  color: '#fff', fontWeight: 600,
-                }}
-              >
-                Eliminar
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
+
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              ¿Estás seguro de que quieres eliminar esta nota?
+              {note?.deletedAt ? ' Esta acción no se puede deshacer.' : ' Se moverá a la papelera.'}
+            </p>
+
+            <button
+              onClick={() => { deleteNote(note.id); setActiveNote(null); setDeleteConfirm(false) }}
+              style={{
+                width: '100%', padding: '10px', borderRadius: 8, border: 'none',
+                background: 'var(--accent)', cursor: 'pointer', fontSize: 14,
+                color: '#fff', fontWeight: 600,
+              }}
+            >
+              {note?.deletedAt ? 'Eliminar permanentemente' : 'Mover a papelera'}
+            </button>
           </div>
         </div>
       )}
