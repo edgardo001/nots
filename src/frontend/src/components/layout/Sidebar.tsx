@@ -81,7 +81,8 @@ export default function Sidebar() {
     )
   }
 
-  const allTags = [...new Set(activeNotes.flatMap(n => n.tags))].sort()
+  const tagCounts = activeNotes.flatMap(n => n.tags).reduce<Record<string, number>>((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc }, {})
+  const allTags = [...new Set(activeNotes.flatMap(n => n.tags))].sort((a, b) => (tagCounts[b] || 0) - (tagCounts[a] || 0))
   const allColors = [...new Set(activeNotes.map(n => n.color))].sort()
   const allFolders = [...new Set(activeNotes.map(n => n.folder))].sort()
   const enableSidebarDnd = viewMode === 'list' && !showTrash
@@ -294,7 +295,7 @@ export default function Sidebar() {
               ✕
             </button>
           )}
-          {allTags.slice(0, 8).map(tag => (
+          {allTags.slice(0, 7).map(tag => (
             <button
               key={tag}
               onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
@@ -310,9 +311,9 @@ export default function Sidebar() {
               #{tag}
             </button>
           ))}
-          {allTags.length > 8 && (
+          {allTags.length > 7 && (
             <span style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.4, padding: '3px 4px' }}>
-              +{allTags.length - 8}
+              +{allTags.length - 7}
             </span>
           )}
         </div>
