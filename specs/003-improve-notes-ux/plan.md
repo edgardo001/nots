@@ -101,4 +101,15 @@ El i18n requiere envolver todas las cadenas visibles con `t()`. Estrategia:
 
 ## Complexity Tracking
 
-Sin violaciones — extensiones incrementales sobre estructura existente. Mayor complejidad: i18n (envolver ~80 cadenas) y animación fuego con partículas CSS.
+Sin violaciones — extensiones incrementales sobre estructura existente.
+Mayor complejidad: i18n (envolver ~80 cadenas), animación fuego con partículas CSS.
+
+### Bugfixes (Phase 17, sesión actual)
+- `deleteAllNotes()` ya no toca settings — evita pérdida de tema/viewMode/autor post-borrado
+- URL inválida valida UUID contra `notes`/`trashNotes` tras carga — toast rojo "Nota no encontrada"
+- `getCurrentPosition()` fire-and-forget en `addNote`/`updateNote` — elimina bloqueo de 5s que impedía crear notas post-Borrar Todo
+
+## Critical Context (updated)
+- `deleteAllNotes()` en `db/operations.ts` ya no hace `db.clear('settings')`
+- `useUrlSync.ts` ya no setea `activeNoteId` inmediatamente en mount — se difiere hasta que `loading` es false
+- `addNote` y `updateNote` en `notesStore.ts` usan `getCurrentPosition().then(...)` fire-and-forget

@@ -192,6 +192,16 @@
 
 ---
 
+---
+
+## Phase 17: Bugfixes post-Borrar Todo & URL inválida
+
+**Purpose**: Correcciones críticas reportadas después de pruebas con Borrar Todo y URLs manuales
+
+- [x] T1701 Fix `deleteAllNotes` no debe borrar settings — remover `db.clear('settings')` para preservar tema, viewMode, locale, autor
+- [x] T1702 Fix URL inválida `?note=<uuid>` no causa pantalla negra — `useUrlSync` ya no setea `activeNoteId` inmediatamente; validar en App.tsx tras cargar notas, mostrar toast error si UUID no existe
+- [x] T1703 Fix `getCurrentPosition()` no bloquea `addNote`/`updateNote` — geolocalización pasa a fire-and-forget con `.then()`, la nota se crea/edita sin esperar
+
 ## Dependencies
 
 - **Phase 1** (URL sync): No dependencies — start first
