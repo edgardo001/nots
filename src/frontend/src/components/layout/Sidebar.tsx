@@ -426,27 +426,30 @@ export default function Sidebar() {
       </div>
 
       {/* Papelera */}
-      <button
-        onClick={() => {
-          const next = !showTrash
-          setShowTrash(next)
-          if (next) { useNotesStore.getState().loadTrash() }
-          else { useNotesStore.getState().loadNotes() }
-        }}
-        aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
-        aria-expanded={showTrash}
-        style={{
-          margin: 8, padding: '7px 12px', borderRadius: 8,
-          border: '1px solid var(--border)', background: 'transparent',
-          color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
-          textAlign: 'left', transition: 'all 0.15s',
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}
-      >
-        <span>🗑</span>
-        <span>Papelera</span>
-        <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
-      </button>
+      <div style={{ position: 'sticky', bottom: 0, background: 'var(--surface)' }}>
+        <button
+          onClick={() => {
+            const next = !showTrash
+            setShowTrash(next)
+            if (next) { useNotesStore.getState().loadTrash() }
+            else { useNotesStore.getState().loadNotes() }
+          }}
+          aria-label={showTrash ? 'Ocultar papelera' : 'Mostrar papelera'}
+          aria-expanded={showTrash}
+          style={{
+            margin: 8, padding: '7px 12px', borderRadius: 8,
+            border: '1px solid var(--border)', background: 'transparent',
+            color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 11,
+            textAlign: 'left', transition: 'all 0.15s',
+            display: 'flex', alignItems: 'center', gap: 6,
+            width: 'calc(100% - 16px)',
+          }}
+        >
+          <span>🗑</span>
+          <span>Papelera</span>
+          <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{showTrash ? '▲' : '▼'}</span>
+        </button>
+      </div>
     </aside>
   )
 }

@@ -196,7 +196,7 @@ export default function App() {
             style={{
               background: activeNote?.color ?? 'var(--surface)',
               borderRadius: isMobile ? 0 : 4,
-              padding: isMobile ? 16 : 24,
+              padding: isMobile ? '12px 16px 16px' : '16px 24px 24px',
               maxWidth: isMobile ? '100%' : 800,
               width: '100%',
               maxHeight: isMobile ? '100%' : '85vh',

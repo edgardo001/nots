@@ -76,6 +76,7 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
           </div>
         </div>
         <span style={{ fontSize: 11, opacity: 0.4, whiteSpace: 'nowrap' }}>
+          {note.updatedLat != null && note.updatedLng != null && '📍 '}
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
         <button onClick={e => { e.stopPropagation(); onDelete() }} aria-label="Eliminar nota" style={{
@@ -174,6 +175,11 @@ export default function NoteCard({ note, onClick, onDelete, onRestore }: NoteCar
       )}
 
       <div style={{ fontSize: 10, opacity: 0.35, marginTop: 10, textAlign: 'right' }}>
+        {note.updatedLat != null && note.updatedLng != null && (
+          <span title={`📍 ${note.updatedLat.toFixed(4)}, ${note.updatedLng.toFixed(4)}`} style={{ marginRight: 6 }}>
+            📍
+          </span>
+        )}
         {new Date(note.updatedAt).toLocaleDateString()}
       </div>
     </div>
