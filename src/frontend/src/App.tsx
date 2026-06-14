@@ -25,6 +25,7 @@ export default function App() {
   const sidebarOpen = useUIStore(s => s.sidebarOpen)
   const setSidebarOpen = useUIStore(s => s.setSidebarOpen)
   const toggleSidebar = useUIStore(s => s.toggleSidebar)
+  const loading = useNotesStore(s => s.loading)
   const showTrash = useUIStore(s => s.showTrash)
   const showSettings = useUIStore(s => s.showSettings)
   const setShowSettings = useUIStore(s => s.setShowSettings)
@@ -38,6 +39,7 @@ export default function App() {
   const [burning, setBurning] = useState(false)
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState<'first' | 'second' | null>(null)
   const [showEmptyTrashConfirm, setShowEmptyTrashConfirm] = useState(false)
+  const [urlError, setUrlError] = useState<string | null>(null)
   const seededRef = useRef(false)
   const noteEditorSaveRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -111,6 +113,35 @@ export default function App() {
     })
     return () => unsub()
   }, [])
+
+  const initialUrlRef = useRef(true)
+  useEffect(() => {
+    if (loading || !initialUrlRef.current) return
+    initialUrlRef.current = false
+    const params = new URLSearchParams(window.location.search)
+    const noteId = params.get('note')
+    const query = params.get('q')
+    if (noteId) {
+      const note = notes.find(n => n.id === noteId) || trashNotes.find(n => n.id === noteId)
+      if (note) {
+        setActiveNote(noteId)
+      } else {
+        setUrlError(`Nota no encontrada: ${noteId.slice(0, 8)}...`)
+        setTimeout(() => setUrlError(null), 4000)
+      }
+    }
+    if (query && !noteId) {
+      const decoded = decodeURIComponent(query)
+      const exists = notes.some(n =>
+        n.title.toLowerCase().includes(decoded.toLowerCase()) ||
+        n.content.toLowerCase().includes(decoded.toLowerCase())
+      )
+      if (!exists) {
+        setUrlError(`Sin resultados para "${decoded}"`)
+        setTimeout(() => setUrlError(null), 4000)
+      }
+    }
+  }, [loading, notes, trashNotes, setActiveNote])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', resolvedTheme)
@@ -270,6 +301,18 @@ export default function App() {
           <NoteGrid burning={burning} />
         </main>
       </div>
+
+      {urlError && (
+        <div style={{
+          position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 99999, background: '#c0392b', color: '#fff', padding: '12px 24px',
+          borderRadius: 6, fontSize: 14, fontWeight: 500,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          {urlError}
+        </div>
+      )}
 
       {showSettings && (
         <SettingsModal onClose={() => setShowSettings(false)} />

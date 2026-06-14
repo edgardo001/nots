@@ -19,12 +19,7 @@ function buildUrl(activeNoteId: string | null, searchQuery: string): string {
 export function useUrlSync() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const noteId = params.get('note')
     const query = params.get('q')
-
-    if (noteId) {
-      useNotesStore.getState().setActiveNote(noteId)
-    }
     if (query) {
       useNotesStore.getState().setSearchQuery(decodeURIComponent(query))
     }
@@ -48,7 +43,10 @@ export function useUrlSync() {
       const store = useNotesStore.getState()
 
       if (noteId && noteId !== store.activeNoteId) {
-        store.setActiveNote(noteId)
+        const note = store.notes.find(n => n.id === noteId) || store.trashNotes.find(n => n.id === noteId)
+        if (note) {
+          store.setActiveNote(noteId)
+        }
       } else if (!noteId && store.activeNoteId) {
         store.setActiveNote(null)
       }
