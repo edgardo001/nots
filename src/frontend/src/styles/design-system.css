@@ -94,12 +94,6 @@ input, textarea, select, button {
   }
 }
 
-@supports (height: 100dvh) {
-  aside[style*="width: 280"] {
-    height: 100dvh !important;
-  }
-}
-
 @media (max-width: 600px) {
   header[role="banner"] {
     padding: 0 12px !important;
@@ -124,8 +118,7 @@ input, textarea, select, button {
   aside[style*="width: 280"] {
     width: 100% !important;
     min-width: auto !important;
-    height: 100% !important;
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px) !important;
+    height: 100dvh !important;
   }
   main {
     padding: 12px !important;

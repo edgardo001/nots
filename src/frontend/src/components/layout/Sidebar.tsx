@@ -105,22 +105,6 @@ export default function Sidebar() {
       display: 'flex', flexDirection: 'column',
       background: 'var(--surface)', borderRight: '1px solid var(--border)',
     }}>
-      {/* Nueva nota */}
-      <div style={{ padding: '16px 12px 10px' }}>
-        <button
-          onClick={addNote}
-          aria-label="Crear nueva nota"
-          style={{
-            width: '100%', padding: '11px 0', border: 'none',
-            borderRadius: 8, background: 'var(--accent)', color: '#fff',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            letterSpacing: '0.02em', transition: 'opacity 0.15s',
-          }}
-        >
-          + Nueva nota
-        </button>
-      </div>
-
       {/* Ordenar + Filtrar en una fila compacta */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 6,
