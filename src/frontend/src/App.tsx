@@ -253,7 +253,7 @@ export default function App() {
           aria-label={sidebarOpen ? 'Esconder barra lateral' : 'Mostrar barra lateral'}
           aria-expanded={sidebarOpen}
           style={{
-            position: 'absolute',
+            position: isMobile ? 'fixed' : 'absolute',
             left: sidebarOpen ? 260 : (isMobile ? 6 : 0),
             top: '50%',
             transform: 'translateY(-50%)',
