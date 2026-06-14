@@ -149,7 +149,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
   const allTags = [...new Set(notes.filter(n => !n.deletedAt).flatMap(n => n.tags))]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%' }}>
       <div style={{ display: 'flex', gap: isMobile ? 4 : 6, alignItems: 'center', flexWrap: 'wrap' }}>
         <div ref={emojiRef} style={{ position: 'relative', flexShrink: 0 }}>
           <button
@@ -442,7 +442,10 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             color: 'var(--text-secondary)', fontSize: 12, padding: 0,
           }}
         >
-          <span style={{ fontSize: 10, transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>▶</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: versionsOpen ? 'rotate(90deg)' : 'none' }}>
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
           Historial de versiones
         </button>
         {versionsOpen && (
@@ -524,7 +527,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             aria-label="Seleccionar color de nota"
             aria-expanded={colorOpen}
             style={{
-              width: 24, height: 24, borderRadius: '50%',
+              width: isMobile ? 32 : 24, height: isMobile ? 32 : 24, borderRadius: '50%',
               border: '2px solid rgba(0,0,0,0.12)',
               background: note.color || NOTE_COLORS[0],
               cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0,
@@ -533,7 +536,7 @@ export default function NoteEditor({ noteId, isMobile }: NoteEditorProps) {
             }}
             title="Color de nota"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
+            <svg width={isMobile ? 18 : 14} height={isMobile ? 18 : 14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.6 }}>
               <path d="M20 2L9 13l2 2L22 4l-2-2z"/>
               <path d="M3 18l2-2 3 3-2 2-3-3z"/>
               <path d="M5 16l-2 5 5-2"/>

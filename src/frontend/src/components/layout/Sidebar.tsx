@@ -426,7 +426,7 @@ export default function Sidebar() {
       </div>
 
       {/* Papelera */}
-      <div style={{ position: 'sticky', bottom: 0, background: 'var(--surface)' }}>
+      <div style={{ marginTop: 'auto', background: 'var(--surface)' }}>
         <button
           onClick={() => {
             const next = !showTrash
