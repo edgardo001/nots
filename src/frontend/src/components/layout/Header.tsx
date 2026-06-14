@@ -556,9 +556,9 @@ export default function Header({ isMobile }: HeaderProps) {
           </button>
           <StorageIndicator onClick={() => setStorageModalOpen(true)} />
         </nav>
-        {storageModalOpen && <StorageModal onClose={() => setStorageModalOpen(false)} />}
       </>
       }
+      {storageModalOpen && <StorageModal onClose={() => setStorageModalOpen(false)} />}
     </header>
   )
 }
