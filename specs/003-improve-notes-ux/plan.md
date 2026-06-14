@@ -121,3 +121,8 @@ Mayor complejidad: i18n (envolver ~80 cadenas), animación fuego con partículas
 - Repair UI overlay con botón "Reparar y reiniciar" — llama `emergencyReset()` (elimina IndexedDB), reseeds
 - `checkDBIntegrity()` en operations.ts — test de lectura, retorna `{ ok, error? }`
 - `emergencyReset()` — cierra DB, llama `indexedDB.deleteDatabase`, recrea en próxima operación
+
+### Phase 19 (sesión actual)
+- "?" markdown help movido de Header a NoteEditor — botón en toolbar, modal con ejemplos clickeables insertan código en cursor vía `insertAtCursor()` con `contentRef`
+- Botón "X" en toolbar de NoteEditor — cierra la nota sin guardar (`setActiveNote(null)` sin `save()`)
+- Sidebar toggle usa `position: fixed` en mobile — `top: 50%` es relativo al viewport, ya no se desplaza con el scroll

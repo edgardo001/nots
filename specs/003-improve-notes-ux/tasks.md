@@ -214,6 +214,19 @@
 - [x] T1806 Init effect con try/catch — si `loadNotes` falla, verifica integridad y muestra repair
 - [x] T1807 FAB try/catch detecta DB corrupta y activa repair automáticamente
 
+---
+
+## Phase 19: Markdown help en NoteEditor + cerrar sin guardar + sidebar fix
+
+**Purpose**: Mover ayuda markdown al editor con inserción de código, agregar botón X para cerrar sin guardar, corregir centrado del toggle sidebar en mobile
+
+- [x] T1901 Remover botón "?" y modal de ayuda markdown de Header.tsx (desktop + mobile menu)
+- [x] T1902 Agregar botón "?" en toolbar de NoteEditor (desktop + mobile) que abre modal de ayuda
+- [x] T1903 Modal de ayuda con botones clickeables: al hacer click en un ejemplo, se inserta el código Markdown en el contenido de la nota (vía `insertAtCursor`) y se cierra el modal
+- [x] T1904 Agregar `contentRef` en textarea + `insertAtCursor()` para inserción precisa en posición del cursor
+- [x] T1905 Agregar botón "X" (cerrar sin guardar) en toolbar de NoteEditor (desktop + mobile) — llama `setActiveNote(null)` sin `save()`
+- [x] T1906 Fix sidebar toggle: cambiar de `position: 'absolute'` a `position: 'fixed'` en mobile para que `top: 50%` sea relativo al viewport, no al contenedor
+
 ## Dependencies
 
 - **Phase 1** (URL sync): No dependencies — start first
