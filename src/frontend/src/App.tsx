@@ -4,7 +4,7 @@ import { useNotesStore } from './stores/notesStore'
 import { useUIStore } from './stores/uiStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useUrlSync } from './hooks/useUrlSync'
-import { deleteOldTrash, seedSampleNotes } from './db/operations'
+import { deleteOldTrash, seedSampleNotes, checkDBIntegrity, emergencyReset, getAllNotes } from './db/operations'
 import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import NoteGrid from './components/layout/NoteGrid'
@@ -40,6 +40,8 @@ export default function App() {
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState<'first' | 'second' | null>(null)
   const [showEmptyTrashConfirm, setShowEmptyTrashConfirm] = useState(false)
   const [urlError, setUrlError] = useState<string | null>(null)
+  const [needsRepair, setNeedsRepair] = useState(false)
+  const [repairing, setRepairing] = useState(false)
   const seededRef = useRef(false)
   const noteEditorSaveRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -66,12 +68,24 @@ export default function App() {
 
   useEffect(() => {
     const init = async () => {
-      await loadNotes()
-      const { notes } = useNotesStore.getState()
-      if (notes.length === 0 && !seededRef.current) {
-        seededRef.current = true
-        await seedSampleNotes()
+      const integrity = await checkDBIntegrity()
+      if (!integrity.ok) {
+        setNeedsRepair(true)
+        return
+      }
+      try {
         await loadNotes()
+        const { notes } = useNotesStore.getState()
+        if (notes.length === 0 && !seededRef.current) {
+          seededRef.current = true
+          await seedSampleNotes()
+          await loadNotes()
+        }
+      } catch {
+        const integrity2 = await checkDBIntegrity()
+        if (!integrity2.ok) {
+          setNeedsRepair(true)
+        }
       }
     }
     init()
@@ -487,14 +501,67 @@ export default function App() {
           </div>
         </div>
       )}
+      {needsRepair && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'var(--bg)', display: 'flex',
+          flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: 16, padding: 32,
+        }}>
+          <span style={{ fontSize: 48 }}>🔧</span>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)', textAlign: 'center' }}>
+            La base de datos necesita reparación
+          </h2>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 360, lineHeight: 1.5 }}>
+            La base de datos local se ha corrompido. Podemos intentar repararla, pero se perderán todas las notas.
+          </p>
+          <button
+            disabled={repairing}
+            onClick={async () => {
+              setRepairing(true)
+              try {
+                await emergencyReset()
+                await loadNotes()
+                const { notes } = useNotesStore.getState()
+                if (notes.length === 0 && !seededRef.current) {
+                  seededRef.current = true
+                  await seedSampleNotes()
+                  await loadNotes()
+                }
+                setNeedsRepair(false)
+              } catch (err) {
+                console.error('Repair failed:', err)
+                setUrlError('No se pudo reparar. Cierra otras pestañas y recarga.')
+                setTimeout(() => setUrlError(null), 8000)
+              } finally {
+                setRepairing(false)
+              }
+            }}
+            style={{
+              padding: '12px 32px', borderRadius: 6, border: 'none',
+              background: 'var(--accent)', color: '#fff', cursor: 'pointer',
+              fontSize: 15, fontWeight: 600, opacity: repairing ? 0.6 : 1,
+            }}
+          >
+            {repairing ? 'Reparando...' : 'Reparar y reiniciar'}
+          </button>
+        </div>
+      )}
+
+      {!needsRepair && (
       <button
         onClick={async () => {
           try {
             await addNote()
           } catch (err) {
             console.error('Error al crear nota:', err)
-            setUrlError('Error al crear nota. Recarga la página e intenta de nuevo.')
-            setTimeout(() => setUrlError(null), 5000)
+            const integrity = await checkDBIntegrity()
+            if (!integrity.ok) {
+              setNeedsRepair(true)
+            } else {
+              setUrlError('Error al crear nota. Recarga la página e intenta de nuevo.')
+              setTimeout(() => setUrlError(null), 5000)
+            }
           }
         }}
         aria-label="Crear nueva nota"
@@ -513,6 +580,7 @@ export default function App() {
       >
         +
       </button>
+      )}
     </div>
   )
 }

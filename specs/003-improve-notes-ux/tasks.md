@@ -209,6 +209,10 @@
 - [x] T1801 `deleteAllNotes` en store resetea `activeNoteId: null` — estado limpio post-borrado
 - [x] T1802 `addNote` envuelto en try/catch — on error, recarga notas y reintenta
 - [x] T1803 FAB button onClick con try/catch — muestra toast de error si falla
+- [x] T1804 `checkDBIntegrity()` + `emergencyReset()` en operations.ts — detecta DB corrupta, elimina y recrea
+- [x] T1805 Repair UI overlay en App.tsx — se muestra automáticamente si la DB está corrupta al iniciar
+- [x] T1806 Init effect con try/catch — si `loadNotes` falla, verifica integridad y muestra repair
+- [x] T1807 FAB try/catch detecta DB corrupta y activa repair automáticamente
 
 ## Dependencies
 

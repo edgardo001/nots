@@ -117,4 +117,7 @@ Mayor complejidad: i18n (envolver ~80 cadenas), animación fuego con partículas
 - `useUrlSync.ts` ya no setea `activeNoteId` inmediatamente en mount — se difiere hasta que `loading` es false
 - `addNote` y `updateNote` en `notesStore.ts` usan `getCurrentPosition().then(...)` fire-and-forget
 - `addNote` envuelto en try/catch con recarga + retry automático
-- FAB "+" en App.tsx con try/catch local y toast de error
+- FAB "+" en App.tsx con try/catch local + `checkDBIntegrity()` — si la DB está corrupta, activa repair UI
+- Repair UI overlay con botón "Reparar y reiniciar" — llama `emergencyReset()` (elimina IndexedDB), reseeds
+- `checkDBIntegrity()` en operations.ts — test de lectura, retorna `{ ok, error? }`
+- `emergencyReset()` — cierra DB, llama `indexedDB.deleteDatabase`, recrea en próxima operación

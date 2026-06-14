@@ -212,6 +212,36 @@ export async function deleteAllNotes(): Promise<void> {
   await db.clear('attachments');
 }
 
+export async function checkDBIntegrity(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const db = await getDB();
+    const tx = db.transaction('notes', 'readonly');
+    await tx.store.count();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+export async function emergencyReset(): Promise<void> {
+  const { closeDB } = await import('./schema');
+  closeDB();
+  const DB_NAME = 'notas-app';
+  await new Promise<void>((resolve, reject) => {
+    const req = indexedDB.deleteDatabase(DB_NAME);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => {
+      console.warn('deleteDatabase blocked, retrying...');
+      setTimeout(() => {
+        const retry = indexedDB.deleteDatabase(DB_NAME);
+        retry.onsuccess = () => resolve();
+        retry.onerror = () => reject(retry.error);
+      }, 500);
+    };
+  });
+}
+
 export async function seedSampleNotes(): Promise<void> {
   const samples = [
     { title: '👋 Bienvenido a nots', content: '# Bienvenido\n\nEsta es tu app de notas. **Características:**\n\n- ✏️ Edición Markdown\n- 🏷️ Etiquetas\n- 🎨 Colores personalizados\n- 📋 Listas de tareas\n- 📦 Exportación ZIP\n\n🔒 **Tus notas son seguras** — todo se almacena en tu navegador. Nada sale de tu dispositivo sin tu permiso.', color: '#fff8e8', tags: ['bienvenida'], emoji: '👋' },
