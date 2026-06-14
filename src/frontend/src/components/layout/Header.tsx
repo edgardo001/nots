@@ -131,10 +131,10 @@ export default function Header({ isMobile }: HeaderProps) {
             aria-label="Menú"
             aria-expanded={menuOpen}
             style={{
-              padding: '6px 10px', borderRadius: 0, border: '1px solid var(--border)',
+              padding: '8px 12px', borderRadius: 6, border: '1px solid var(--border)',
               background: menuOpen ? 'var(--accent-light)' : 'transparent',
               color: menuOpen ? 'var(--accent)' : 'var(--text)',
-              cursor: 'pointer', fontSize: 15, transition: 'all 0.15s',
+              cursor: 'pointer', fontSize: 18, transition: 'all 0.15s',
               lineHeight: 1,
             }}
           >
@@ -152,9 +152,9 @@ export default function Header({ isMobile }: HeaderProps) {
                 onClick={() => { setImportOpen(!importOpen); setMenuOpen(false) }}
                 aria-label="Exportar o importar notas"
                 style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  padding: '10px 16px', borderRadius: 6, border: 'none',
                   background: 'transparent', color: 'var(--text)',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   textAlign: 'left', transition: 'all 0.1s',
                 }}
               >
@@ -164,9 +164,9 @@ export default function Header({ isMobile }: HeaderProps) {
                 onClick={() => { setViewMode(viewMode === 'postit' ? 'list' : 'postit'); setMenuOpen(false) }}
                 aria-label="Cambiar vista"
                 style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  padding: '10px 16px', borderRadius: 6, border: 'none',
                   background: viewMode === 'list' ? 'var(--accent-light)' : 'transparent',
-                  color: 'var(--text)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  color: 'var(--text)', cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   textAlign: 'left', transition: 'all 0.1s',
                 }}
               >
@@ -176,9 +176,9 @@ export default function Header({ isMobile }: HeaderProps) {
                 onClick={() => { setTheme(themeCycle(theme)); setMenuOpen(false) }}
                 aria-label="Cambiar tema"
                 style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  padding: '10px 16px', borderRadius: 6, border: 'none',
                   background: 'transparent', color: 'var(--text)',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   textAlign: 'left', transition: 'all 0.1s',
                 }}
               >
@@ -187,9 +187,9 @@ export default function Header({ isMobile }: HeaderProps) {
               <button
                 onClick={() => { setMenuOpen(false) }}
                 style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  padding: '10px 16px', borderRadius: 6, border: 'none',
                   background: 'transparent', color: 'var(--text)',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   textAlign: 'left', transition: 'all 0.1s',
                 }}
               >
@@ -198,9 +198,9 @@ export default function Header({ isMobile }: HeaderProps) {
               <button
                 onClick={() => mobileFileRef.current?.click()}
                 style={{
-                  padding: '8px 14px', borderRadius: 0, border: 'none',
+                  padding: '10px 16px', borderRadius: 6, border: 'none',
                   background: 'transparent', color: 'var(--text)',
-                  cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  cursor: 'pointer', fontSize: 14, fontWeight: 500,
                   textAlign: 'left', display: 'block', width: '100%',
                 }}
               >
@@ -225,9 +225,9 @@ export default function Header({ isMobile }: HeaderProps) {
               aria-label="Exportar o importar notas"
               aria-expanded={importOpen}
               style={{
-                padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
+                padding: '8px 14px', borderRadius: 6, border: '1px solid var(--border)',
                 background: 'transparent', color: 'var(--text)',
-                cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                cursor: 'pointer', fontSize: 14, fontWeight: 500,
                 transition: 'all 0.15s',
               }}
             >
@@ -237,13 +237,13 @@ export default function Header({ isMobile }: HeaderProps) {
               <div style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 4,
                 background: 'var(--surface)', border: '1px solid var(--border)',
-                borderRadius: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                borderRadius: 6, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                 minWidth: 180, zIndex: 20, overflow: 'hidden',
               }}>
                 <button
                   onClick={exportAll}
                   style={{
-                    display: 'block', width: '100%', padding: '10px 14px',
+                    display: 'block', width: '100%', padding: '10px 16px',
                     border: 'none', background: 'transparent', cursor: 'pointer',
                     textAlign: 'left', fontSize: 13, color: 'var(--text)',
                     transition: 'background 0.1s',
@@ -254,7 +254,7 @@ export default function Header({ isMobile }: HeaderProps) {
                 <button
                   onClick={() => desktopFileRef.current?.click()}
                   style={{
-                    display: 'block', width: '100%', padding: '10px 14px',
+                    display: 'block', width: '100%', padding: '10px 16px',
                     border: 'none', background: 'transparent', cursor: 'pointer',
                     textAlign: 'left', fontSize: 13, color: 'var(--text)',
                     transition: 'background 0.1s',
@@ -278,10 +278,10 @@ export default function Header({ isMobile }: HeaderProps) {
             onClick={() => setViewMode(viewMode === 'postit' ? 'list' : 'postit')}
             aria-label={viewMode === 'postit' ? 'Cambiar a vista lista' : 'Cambiar a vista post-it'}
             style={{
-              padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
+              padding: '8px 14px', borderRadius: 6, border: '1px solid var(--border)',
               background: viewMode === 'list' ? 'var(--accent)' : 'transparent',
               color: viewMode === 'list' ? '#fff' : 'var(--text)',
-              cursor: 'pointer', fontSize: 13, fontWeight: 500,
+              cursor: 'pointer', fontSize: 14, fontWeight: 500,
               transition: 'all 0.15s',
             }}
           >
@@ -291,9 +291,9 @@ export default function Header({ isMobile }: HeaderProps) {
             onClick={() => setTheme(themeCycle(theme))}
             aria-label={`Tema: ${theme}`}
             style={{
-              padding: '6px 14px', borderRadius: 0, border: '1px solid var(--border)',
+              padding: '8px 14px', borderRadius: 6, border: '1px solid var(--border)',
               background: 'transparent', color: 'var(--text)',
-              cursor: 'pointer', fontSize: 15, transition: 'all 0.15s',
+              cursor: 'pointer', fontSize: 18, transition: 'all 0.15s',
             }}
           >
             {theme === 'dark' ? '☀️' : theme === 'system' ? '💻' : '🌙'}
