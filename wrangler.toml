@@ -1,0 +1,11 @@
+name = "nots"
+compatibility_date = "2026-06-14"
+
+[pages]
+build_command = "bun run build"
+build_output_dir = "dist"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
