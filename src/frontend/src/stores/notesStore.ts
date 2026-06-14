@@ -11,6 +11,7 @@ import {
   addVersion as dbAddVersion,
   getVersions as dbGetVersions,
 } from '../db/operations';
+import { getCurrentPosition } from '../utils/geolocation';
 
 function sortNotes(notes: Note[], field: SortField, order: SortOrder): Note[] {
   const sorted = [...notes].sort((a, b) => {
@@ -87,7 +88,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   addNote: async () => {
-    const note = await dbAddNote();
+    const geo = await getCurrentPosition();
+    const note = await dbAddNote(geo ? {
+      createdLat: geo.lat, createdLng: geo.lng,
+      updatedLat: geo.lat, updatedLng: geo.lng,
+    } : undefined);
     const { sortField, sortOrder } = get();
     const notes = sortNotes([...get().notes, note], sortField, sortOrder);
     set({ notes, activeNoteId: note.id });
@@ -95,7 +100,11 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   updateNote: async (id: string, data: Partial<Note>) => {
-    const updated = await dbUpdateNote(id, data);
+    const geo = await getCurrentPosition();
+    const updated = await dbUpdateNote(id, {
+      ...data,
+      ...(geo && { updatedLat: geo.lat, updatedLng: geo.lng }),
+    });
     if (!updated) return;
     const { sortField, sortOrder } = get();
     const notes = sortNotes(
@@ -158,6 +167,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   saveVersion: async (noteId: string, title: string, content: string) => {
+    const geo = await getCurrentPosition();
     const versions = await dbGetVersions(noteId);
     const nextNum = versions.length > 0 ? versions[0].versionNumber + 1 : 1;
     await dbAddVersion({
@@ -166,6 +176,7 @@ export const useNotesStore = create<NotesState>((set, get) => ({
       content,
       versionNumber: nextNum,
       savedAt: new Date().toISOString(),
+      ...(geo && { lat: geo.lat, lng: geo.lng }),
     });
   },
 
@@ -186,7 +197,12 @@ export const useNotesStore = create<NotesState>((set, get) => ({
   },
 
   forkFromVersion: async (version: NoteVersion) => {
-    const note = await dbAddNote({ title: `${version.title} (fork)`, content: version.content });
+    const geo = await getCurrentPosition();
+    const note = await dbAddNote({
+      title: `${version.title} (fork)`,
+      content: version.content,
+      ...(geo && { createdLat: geo.lat, createdLng: geo.lng, updatedLat: geo.lat, updatedLng: geo.lng }),
+    });
     const { sortField, sortOrder } = get();
     const notes = sortNotes([...get().notes, note], sortField, sortOrder);
     set({ notes, activeNoteId: note.id });

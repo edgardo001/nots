@@ -19,7 +19,7 @@ export async function getNote(id: string): Promise<Note | undefined> {
 }
 
 export async function addNote(
-  partial?: Partial<Pick<Note, 'title' | 'content' | 'color' | 'emoji' | 'folder' | 'tags'>>
+  partial?: Partial<Pick<Note, 'title' | 'content' | 'color' | 'emoji' | 'folder' | 'tags' | 'createdLat' | 'createdLng' | 'updatedLat' | 'updatedLng'>>
 ): Promise<Note> {
   const db = await getDB();
   const allNotes = await db.getAll('notes');
@@ -37,6 +37,10 @@ export async function addNote(
     updatedAt: nowISO(),
     deletedAt: null,
     position: maxPosition + 1,
+    createdLat: partial?.createdLat,
+    createdLng: partial?.createdLng,
+    updatedLat: partial?.updatedLat,
+    updatedLng: partial?.updatedLng,
   };
 
   await db.add('notes', note);
